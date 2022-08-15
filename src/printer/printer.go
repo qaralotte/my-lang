@@ -3,12 +3,11 @@ package printer
 import (
 	"fmt"
 	"my-compiler/ast"
-	"my-compiler/scanner"
 	"my-compiler/token"
 	"my-compiler/variable"
 )
 
-func PrintTokens(s *scanner.Scanner) {
+func PrintTokens(s *token.Scanner) {
 	for tok, lit := s.ScanNext(); tok != token.EOF; tok, lit = s.ScanNext() {
 		fmt.Printf("%s: %s\n", token.String(tok), lit)
 	}

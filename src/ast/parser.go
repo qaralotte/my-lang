@@ -2,13 +2,12 @@ package ast
 
 import (
 	"fmt"
-	"my-compiler/scanner"
 	"my-compiler/token"
 	"my-compiler/variable"
 )
 
 type Parser struct {
-	*scanner.Scanner // token 扫描器
+	*token.Scanner // token 扫描器
 
 	token.Token        // 当前定位的 token
 	Lit         string // 当前 token 的文字标识
@@ -21,7 +20,7 @@ type Parser struct {
 var globalParser *Parser
 
 // 装载扫描器并设置全局解析器为当前解析器
-func (p *Parser) init(s *scanner.Scanner) {
+func (p *Parser) init(s *token.Scanner) {
 	p.Scanner = s
 	p.NextToken()
 	globalParser = p
@@ -30,7 +29,7 @@ func (p *Parser) init(s *scanner.Scanner) {
 	p.Variables = append(p.Variables, nil)
 }
 
-func NewParser(scanner *scanner.Scanner) *Parser {
+func NewParser(scanner *token.Scanner) *Parser {
 	var parser Parser
 
 	// 初始化扫描器

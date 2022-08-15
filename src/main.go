@@ -3,14 +3,14 @@ package main
 import (
 	"my-compiler/ast"
 	"my-compiler/printer"
-	"my-compiler/scanner"
+	"my-compiler/token"
 	"os"
 	"path/filepath"
 )
 
 func main() {
 
-	s := scanner.NewScanner(filepath.Join(os.Getenv("GOPATH"), "test.m"))
+	s := token.NewScanner(filepath.Join(os.Getenv("GOPATH"), "test.m"))
 	// printer.PrintTokens(s)
 
 	p := ast.NewParser(s)

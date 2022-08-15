@@ -1,7 +1,6 @@
-package scanner
+package token
 
 import (
-	"my-compiler/token"
 	"os"
 	"unicode"
 	"unicode/utf8"
@@ -68,16 +67,16 @@ func (s *Scanner) skipSpace() {
 	}
 }
 
-func (s *Scanner) isKeyword(identity string) token.Token {
-	for _, keyword := range token.Keywords {
+func (s *Scanner) isKeyword(identity string) Token {
+	for _, keyword := range Keywords {
 		if identity == keyword {
-			return token.KEYWORD
+			return KEYWORD
 		}
 	}
-	return token.IDENTITY
+	return IDENTITY
 }
 
-func (s *Scanner) scanIdentity() (tok token.Token, lit string) {
+func (s *Scanner) scanIdentity() (tok Token, lit string) {
 	for unicode.IsLetter(s.ch) || s.ch == '_' {
 		// 目前仅十进制
 		lit += string(s.ch)
@@ -88,8 +87,8 @@ func (s *Scanner) scanIdentity() (tok token.Token, lit string) {
 }
 
 // 扫描当前字符
-func (s *Scanner) scanNumber() (tok token.Token, lit string) {
-	tok = token.INTEGER
+func (s *Scanner) scanNumber() (tok Token, lit string) {
+	tok = INTEGER
 	for unicode.IsNumber(s.ch) {
 		// 目前仅十进制
 		lit += string(s.ch)
@@ -99,33 +98,33 @@ func (s *Scanner) scanNumber() (tok token.Token, lit string) {
 }
 
 // ScanNext 扫描当前字符返回对应的 Token, 并且偏移 offset 至下一个字符
-func (s *Scanner) ScanNext() (tok token.Token, lit string) {
+func (s *Scanner) ScanNext() (tok Token, lit string) {
 
 	s.skipSpace()
 
 	lit = string(s.ch)
 	switch s.ch {
 	case eof:
-		tok = token.EOF
+		tok = EOF
 	case '\n':
-		tok = token.LINEBREAK
+		tok = LINEBREAK
 		lit = `\n`
 	case '+':
-		tok = token.PLUS
+		tok = PLUS
 	case '-':
-		tok = token.MINUS
+		tok = MINUS
 	case '*':
-		tok = token.STAR
+		tok = STAR
 	case '/':
-		tok = token.SLASH
+		tok = SLASH
 	case ';':
-		tok = token.SEMICOLON
+		tok = SEMICOLON
 	case '(':
-		tok = token.LPAREN
+		tok = LPAREN
 	case ')':
-		tok = token.RPAREN
+		tok = RPAREN
 	case '=':
-		tok = token.ASSIGN
+		tok = ASSIGN
 	default:
 		if unicode.IsNumber(s.ch) {
 			// 如果是数字
