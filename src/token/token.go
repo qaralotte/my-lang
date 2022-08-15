@@ -19,10 +19,12 @@ const (
 	DOT       // .
 
 	IDENTITY  // abc
-	KEYWORD   // _
 	INTLIT    // 123
 	FLOATLIT  // 123.456
 	STRINGLIT // "xx", 'xx'
+
+	TRUE  // true
+	FALSE // false
 )
 
 var tokens = map[Token]string{
@@ -40,16 +42,25 @@ var tokens = map[Token]string{
 	DOT:       ".",
 
 	IDENTITY:  "IDENTITY",
-	KEYWORD:   "KEYWORD",
 	INTLIT:    "INTLIT",
 	FLOATLIT:  "FLOATLIT",
 	STRINGLIT: "STRINGLIT",
+
+	TRUE:  "true",
+	FALSE: "false",
 }
 
 func String(token Token) string {
 	return fmt.Sprintf("token(%s)", tokens[token])
 }
 
-var Keywords = []string{
-	"_",
+type KeywordPair struct {
+	Name string
+	Token
+}
+
+var Keywords = []KeywordPair{
+	{"_", EOF},
+	{"true", TRUE},
+	{"false", FALSE},
 }

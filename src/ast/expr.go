@@ -63,6 +63,11 @@ func implExpr() (Expr, variable.Type) {
 		var node LitExpr
 		node.Lit = globalParser.Lit
 		return &node, variable.STRING
+	case token.TRUE, token.FALSE:
+		// 布尔值
+		var node LitExpr
+		node.Lit = globalParser.Lit
+		return &node, variable.BOOL
 	}
 
 	panic(fmt.Sprintf("错误: 表达式未知的 token: %s", token.String(globalParser.Token)))

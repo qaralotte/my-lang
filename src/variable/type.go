@@ -7,6 +7,7 @@ const (
 	INT
 	FLOAT
 	STRING
+	BOOL
 )
 
 func TypeString(t Type) string {
@@ -19,6 +20,8 @@ func TypeString(t Type) string {
 		return "float"
 	case STRING:
 		return "string"
+	case BOOL:
+		return "bool"
 	}
 	return "undef"
 }

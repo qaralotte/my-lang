@@ -70,8 +70,8 @@ func (s *Scanner) skipSpace() {
 // 判断是否是关键词
 func (s *Scanner) isKeyword(identity string) Token {
 	for _, keyword := range Keywords {
-		if identity == keyword {
-			return KEYWORD
+		if identity == keyword.Name {
+			return keyword.Token
 		}
 	}
 	return IDENTITY
