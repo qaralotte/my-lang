@@ -16,12 +16,13 @@ const (
 	LPAREN    // (
 	RPAREN    // )
 	ASSIGN    // =
+	DOT       // .
 
-	IDENTITY // abc
-	KEYWORD  // _
-	INTEGER  // 123
-	FLOAT    // 123.456
-	STRING   // "xx", 'xx'
+	IDENTITY  // abc
+	KEYWORD   // _
+	INTLIT    // 123
+	FLOATLIT  // 123.456
+	STRINGLIT // "xx", 'xx'
 )
 
 var tokens = map[Token]string{
@@ -36,12 +37,13 @@ var tokens = map[Token]string{
 	LPAREN:    "(",
 	RPAREN:    ")",
 	ASSIGN:    "=",
+	DOT:       ".",
 
-	IDENTITY: "IDENTITY",
-	KEYWORD:  "KEYWORD",
-	INTEGER:  "INTEGER",
-	FLOAT:    "FLOAT",
-	STRING:   "STRING",
+	IDENTITY:  "IDENTITY",
+	KEYWORD:   "KEYWORD",
+	INTLIT:    "INTLIT",
+	FLOATLIT:  "FLOATLIT",
+	STRINGLIT: "STRINGLIT",
 }
 
 func String(token Token) string {

@@ -48,12 +48,17 @@ func implExpr() (Expr, variable.Type) {
 		return &IdentityExpr{
 			Var: va,
 		}, va.Type
-	case token.INTEGER:
+	case token.INTLIT:
+		// 整数
+		var node LitExpr
+		node.Lit = globalParser.Lit
+		return &node, variable.INT
+	case token.FLOATLIT:
 		// 数字
 		var node LitExpr
 		node.Lit = globalParser.Lit
-		return &node, variable.NUMBER
-	case token.STRING:
+		return &node, variable.FLOAT
+	case token.STRINGLIT:
 		// 字符串
 		var node LitExpr
 		node.Lit = globalParser.Lit

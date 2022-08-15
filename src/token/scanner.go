@@ -88,20 +88,38 @@ func (s *Scanner) scanIdentity() (tok Token, lit string) {
 	return
 }
 
-// 扫描数字字面量
-func (s *Scanner) scanNumber() (tok Token, lit string) {
-	tok = INTEGER
+func (s *Scanner) scanFloat(decimal string) (tok Token, lit string) {
+	tok = FLOATLIT
 	for unicode.IsNumber(s.ch) {
 		// 目前仅十进制
 		lit += string(s.ch)
 		s.next()
+	}
+	lit = decimal + "." + lit
+	return
+}
+
+// 扫描数字字面量
+func (s *Scanner) scanNumber() (tok Token, lit string) {
+	tok = INTLIT
+	for unicode.IsNumber(s.ch) {
+		// 目前仅十进制
+		lit += string(s.ch)
+		s.next()
+
+		// 如果有小数点，则应该是浮点数
+		if s.ch == '.' {
+			s.next()
+			return s.scanFloat(lit)
+		}
+
 	}
 	return
 }
 
 // 扫描字符串字面量
 func (s *Scanner) scanString(end rune) (tok Token, lit string) {
-	tok = STRING
+	tok = STRINGLIT
 	// [']xxx'
 	s.next()
 
