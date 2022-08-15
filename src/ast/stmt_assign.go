@@ -50,7 +50,7 @@ func (p *Parser) parseAssignStatement() *AssignStmt {
 			Right: right,
 		}
 	} else {
-		panic("错误的赋值语句")
+		panic(fmt.Sprintf("非法符号: %s", token.String(op)))
 	}
 
 }

@@ -129,7 +129,7 @@ func parseExpr(currentPriority int) Expr {
 	var left, right Expr
 
 	// 从左边开始解析
-	// [1] + 2
+	// [1] + 2 + 3
 	left = implExpr()
 	if left == nil {
 		return left
@@ -140,23 +140,22 @@ func parseExpr(currentPriority int) Expr {
 		return left
 	}
 
-	tok := globalParser.Token
-
-	// 1 [+] 2
-	for priority(operator(tok)) > currentPriority {
+	// 1 [+] 2 + 3
+	op := operator(globalParser.Token)
+	for priority(op) > currentPriority {
 		globalParser.NextToken()
 
-		// 1 + [2]
-		right = parseExpr(priority(operator(tok)))
+		// 1 + [2 + 3]
+		right = parseExpr(currentPriority)
 		if right == nil {
 			panic("表达式错误")
 		}
 
-		//   Node(no-val)
-		//      /    \
-		//   left   right
+		//     node
+		//    /    \
+		// left   right
 
-		left = makeBinary(left, operator(tok), right)
+		left = makeBinary(left, op, right)
 
 		if endExpr() {
 			return left

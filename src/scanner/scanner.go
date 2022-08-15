@@ -1,8 +1,8 @@
 package scanner
 
 import (
-	"io/ioutil"
 	"my-compiler/token"
+	"os"
 	"unicode"
 	"unicode/utf8"
 )
@@ -23,7 +23,7 @@ func NewScanner(path string) (s *Scanner) {
 	var scanner Scanner
 
 	// 读取文件内容并存进 src
-	byt, err := ioutil.ReadFile(path)
+	byt, err := os.ReadFile(path)
 	if err != nil {
 		panic(err)
 	}
