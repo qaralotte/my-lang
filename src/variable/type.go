@@ -24,10 +24,10 @@ func TypeString(t Type) string {
 func Merge(typ1 *Type, typ2 *Type) {
 
 	// 如果两个类型中有一个是none类型，则none类型自动变成另一个类型
-	if *typ1 == NONE && *typ2 != NONE {
+	if *typ1 == NONE {
 		typ1 = typ2
 	}
-	if *typ1 != NONE && *typ2 == NONE {
+	if *typ2 == NONE {
 		typ2 = typ1
 	}
 

@@ -47,12 +47,17 @@ func implExpr() (Expr, variable.Type) {
 		}
 		return &IdentityExpr{
 			Var: va,
-		}, variable.NONE
+		}, va.Type
 	case token.INTEGER:
 		// 数字
 		var node LitExpr
 		node.Lit = globalParser.Lit
 		return &node, variable.NUMBER
+	case token.STRING:
+		// 字符串
+		var node LitExpr
+		node.Lit = globalParser.Lit
+		return &node, variable.STRING
 	}
 
 	panic(fmt.Sprintf("错误: 表达式未知的 token: %s", token.String(globalParser.Token)))

@@ -67,6 +67,7 @@ func (s *Scanner) skipSpace() {
 	}
 }
 
+// 判断是否是关键词
 func (s *Scanner) isKeyword(identity string) Token {
 	for _, keyword := range Keywords {
 		if identity == keyword {
@@ -76,6 +77,7 @@ func (s *Scanner) isKeyword(identity string) Token {
 	return IDENTITY
 }
 
+// 扫描变量或者关键词字面量
 func (s *Scanner) scanIdentity() (tok Token, lit string) {
 	for unicode.IsLetter(s.ch) || s.ch == '_' {
 		// 目前仅十进制
@@ -86,7 +88,7 @@ func (s *Scanner) scanIdentity() (tok Token, lit string) {
 	return
 }
 
-// 扫描当前字符
+// 扫描数字字面量
 func (s *Scanner) scanNumber() (tok Token, lit string) {
 	tok = INTEGER
 	for unicode.IsNumber(s.ch) {
@@ -94,6 +96,24 @@ func (s *Scanner) scanNumber() (tok Token, lit string) {
 		lit += string(s.ch)
 		s.next()
 	}
+	return
+}
+
+// 扫描字符串字面量
+func (s *Scanner) scanString(end rune) (tok Token, lit string) {
+	tok = STRING
+	// [']xxx'
+	s.next()
+
+	// '[xxx]'
+	for s.ch != end {
+		lit += string(s.ch)
+		s.next()
+	}
+
+	// 'xxx[']
+	s.next()
+
 	return
 }
 
@@ -125,6 +145,11 @@ func (s *Scanner) ScanNext() (tok Token, lit string) {
 		tok = RPAREN
 	case '=':
 		tok = ASSIGN
+	case '\'':
+		tok, lit = s.scanString('\'')
+		return
+	case '"':
+		tok, lit = s.scanString('"')
 	default:
 		if unicode.IsNumber(s.ch) {
 			// 如果是数字

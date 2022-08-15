@@ -21,7 +21,7 @@ const (
 	KEYWORD  // _
 	INTEGER  // 123
 	FLOAT    // 123.456
-	STRING   // "xx"
+	STRING   // "xx", 'xx'
 )
 
 var tokens = map[Token]string{
