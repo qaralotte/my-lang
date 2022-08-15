@@ -28,16 +28,16 @@ func (*LitExpr) expr()      {}
 func (*IdentityExpr) expr() {}
 
 // 解析 1 为何物, "str" 为何物, a 为何物
-func implExpr() Expr {
+func implExpr() (Expr, variable.Type) {
 
 	switch globalParser.Token {
 	case token.LPAREN:
 		// 括号 (优先计算)
 		globalParser.NextToken()
-		node := parseExpr(0)
+		node, typ := parseExpr(0)
 
 		globalParser.Require(token.RPAREN, false)
-		return node
+		return node, typ
 	case token.IDENTITY:
 		// 变量
 		va := variable.FindVariable(globalParser.Variables, globalParser.Lit)
@@ -47,12 +47,12 @@ func implExpr() Expr {
 		}
 		return &IdentityExpr{
 			Var: va,
-		}
+		}, variable.NONE
 	case token.INTEGER:
 		// 数字
 		var node LitExpr
 		node.Lit = globalParser.Lit
-		return &node
+		return &node, variable.NUMBER
 	}
 
 	panic(fmt.Sprintf("错误: 表达式未知的 token: %s", token.String(globalParser.Token)))
@@ -125,19 +125,20 @@ func makeBinary(left Expr, op int, right Expr) *BinaryExpr {
 }
 
 // ParseExpr 表达式解析
-func parseExpr(currentPriority int) Expr {
+func parseExpr(currentPriority int) (Expr, variable.Type) {
 	var left, right Expr
+	var leftType, rightType variable.Type
 
 	// 从左边开始解析
 	// [1] + 2 + 3
-	left = implExpr()
+	left, leftType = implExpr()
 	if left == nil {
-		return left
+		return left, leftType
 	}
 
 	globalParser.NextToken()
 	if endExpr() {
-		return left
+		return left, leftType
 	}
 
 	// 1 [+] 2 + 3
@@ -146,9 +147,17 @@ func parseExpr(currentPriority int) Expr {
 		globalParser.NextToken()
 
 		// 1 + [2 + 3]
-		right = parseExpr(currentPriority)
+		right, rightType = parseExpr(currentPriority)
 		if right == nil {
 			panic("表达式错误")
+		}
+
+		// 向下合并类型
+		variable.Merge(&leftType, &rightType)
+
+		// 检查类型运算
+		if !variable.CanCalc(leftType, rightType) {
+			panic(fmt.Sprintf("错误: 类型 %s 不能与 类型 %s 计算", variable.TypeString(leftType), variable.TypeString(rightType)))
 		}
 
 		//     node
@@ -158,9 +167,9 @@ func parseExpr(currentPriority int) Expr {
 		left = makeBinary(left, op, right)
 
 		if endExpr() {
-			return left
+			return left, leftType
 		}
 	}
 
-	return left
+	return left, leftType
 }

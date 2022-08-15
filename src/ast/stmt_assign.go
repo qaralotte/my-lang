@@ -42,7 +42,8 @@ func (p *Parser) parseAssignStatement() *AssignStmt {
 	op := p.Token
 	p.NextToken()
 
-	right := parseExpr(0)
+	right, typ := parseExpr(0)
+	left.Type = typ
 
 	if op == token.ASSIGN {
 		return &AssignStmt{

@@ -9,7 +9,8 @@ func (*ExprStmt) stmt() {}
 
 // ParseExprStatement 表达式语句 (语句里只包含表达式)
 func (p *Parser) parseExprStatement() *ExprStmt {
+	expr, _ := parseExpr(0)
 	return &ExprStmt{
-		Expr: parseExpr(0),
+		expr,
 	}
 }
