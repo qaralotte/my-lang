@@ -3,8 +3,8 @@ package printer
 import (
 	"fmt"
 	"my-compiler/ast"
+	"my-compiler/object"
 	"my-compiler/token"
-	"my-compiler/variable"
 )
 
 func PrintTokens(s *token.Scanner) {
@@ -31,7 +31,7 @@ func PrintExpr(indentation int, expr ast.Expr) {
 		// 变量
 		expr := expr.(*ast.IdentityExpr)
 		fmt.Println("[IdentityExpr]")
-		PrintVariable(indentation+1, expr.Var)
+		PrintObject(indentation+1, expr.Object)
 	case *ast.BinaryExpr:
 		// Left [Op] Right
 		expr := expr.(*ast.BinaryExpr)
@@ -54,15 +54,25 @@ func PrintStmt(indentation int, stmt ast.Stmt) {
 	case *ast.AssignStmt:
 		stmt := stmt.(*ast.AssignStmt)
 		fmt.Println("[AssignStmt]")
-		PrintVariable(indentation+1, stmt.Var)
+		PrintObject(indentation+1, stmt.Object)
 		PrintExpr(indentation+1, stmt.Right)
 	}
 }
 
-func PrintVariable(indentation int, va *variable.Variable) {
+func PrintObject(indentation int, obj object.Object) {
 	for i := 0; i < indentation; i++ {
 		fmt.Print("  ")
 	}
 
-	fmt.Printf("[Var] type: %s, name: %s\n", variable.TypeString(va.Type), va.Name)
+	switch obj.(type) {
+	case *object.Variable:
+		o := obj.(*object.Variable)
+		fmt.Printf("[Variable] type: %s, name: %s\n", object.TypeString(o.Type), o.Name)
+	case *object.Function:
+		o := obj.(*object.Function)
+		fmt.Printf("[Function] type: %s, name: %s\n", object.TypeString(o.Type), o.Name)
+		for i := 0; i < len(o.Args); i++ {
+			PrintObject(indentation+1, o.Args[i])
+		}
+	}
 }

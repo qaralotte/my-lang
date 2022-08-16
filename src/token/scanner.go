@@ -176,6 +176,10 @@ func (s *Scanner) ScanNext() (tok Token, lit string) {
 		tok = LPAREN
 	case ')':
 		tok = RPAREN
+	case '{':
+		tok = LBRACE
+	case '}':
+		tok = RBRACE
 	case '.':
 		tok = DOT
 	case '\'':

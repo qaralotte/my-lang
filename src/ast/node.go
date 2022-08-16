@@ -14,25 +14,4 @@ type (
 		Node
 		stmt()
 	}
-
-	// Def define
-	Def interface {
-		Node
-		def()
-	}
 )
-
-// ----- Statement -----
-
-// ----- Define -----
-
-// DefVar 定义变量
-type DefVar struct {
-	Def
-	Name  string
-	Value Expr
-}
-
-//
-
-func (*DefVar) def() {}

@@ -15,6 +15,8 @@ const (
 	SEMICOLON // ;
 	LPAREN    // (
 	RPAREN    // )
+	LBRACE    // {
+	RBRACE    // }
 	ASSIGN    // =
 	DOT       // .
 	NOT       // !
@@ -30,8 +32,9 @@ const (
 	FLOATLIT  // 123.456
 	STRINGLIT // "xx", 'xx'
 
-	TRUE  // true
-	FALSE // false
+	TRUE
+	FALSE
+	FN
 )
 
 var tokens = map[Token]string{
@@ -45,6 +48,8 @@ var tokens = map[Token]string{
 	SEMICOLON: ";",
 	LPAREN:    "(",
 	RPAREN:    ")",
+	LBRACE:    "{",
+	RBRACE:    "}",
 	DOT:       ".",
 	ASSIGN:    "=",
 	EQ:        "==",
@@ -62,6 +67,7 @@ var tokens = map[Token]string{
 
 	TRUE:  "true",
 	FALSE: "false",
+	FN:    "fn",
 }
 
 func String(token Token) string {
@@ -77,4 +83,5 @@ var Keywords = []KeywordPair{
 	{"_", EOF},
 	{"true", TRUE},
 	{"false", FALSE},
+	{"fn", FN},
 }

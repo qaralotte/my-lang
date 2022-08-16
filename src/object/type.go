@@ -1,4 +1,6 @@
-package variable
+package object
+
+import "fmt"
 
 type Type int
 
@@ -23,7 +25,7 @@ func TypeString(t Type) string {
 	case BOOL:
 		return "bool"
 	}
-	return "undef"
+	panic(fmt.Sprintf("错误: 未知类型 %d", t))
 }
 
 // Merge 如果可以的话，类型应该向下合并

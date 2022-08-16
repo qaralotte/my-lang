@@ -2,8 +2,8 @@ package ast
 
 import (
 	"fmt"
+	"my-compiler/object"
 	"my-compiler/token"
-	"my-compiler/variable"
 )
 
 type Parser struct {
@@ -12,8 +12,8 @@ type Parser struct {
 	token.Token        // 当前定位的 token
 	Lit         string // 当前 token 的文字标识
 
-	Stmts     []Stmt               // 语句
-	Variables []*variable.Variable // 变量
+	Stmts   []Stmt          // 语句
+	Objects []object.Object // 变量
 }
 
 // 全局解析器
@@ -25,8 +25,8 @@ func (p *Parser) init(s *token.Scanner) {
 	p.NextToken()
 	globalParser = p
 
-	// 根变量表第一个元素必定是 nil
-	p.Variables = append(p.Variables, nil)
+	// 根对象表第一个元素必定是 nil
+	p.Objects = append(p.Objects, nil)
 }
 
 func NewParser(scanner *token.Scanner) *Parser {
@@ -47,13 +47,20 @@ func (p *Parser) NextToken() {
 }
 
 // Require 检查传入的 token, 不符合需要的 token 就 panic
-func (p *Parser) Require(tok token.Token, autoNext bool) {
+func (p *Parser) Require(tok token.Token, autoNext bool) string {
 	if p.Token != tok {
 		panic(fmt.Sprintf("错误: 需要的 token: %s, 实际提供的 token: %s", token.String(tok), token.String(p.Token)))
 	}
+	str := p.Lit
 	if autoNext {
 		p.NextToken()
 	}
+	return str
+}
+
+// ShuttleChannel 穿梭对象表通道 (例如: 从全局对象表进入局部对象表)
+func (p *Parser) ShuttleChannel(channel *object.Channel) {
+	p.Objects = channel.Next
 }
 
 // ParseStmts 解析语句并整理为语句数组
@@ -65,8 +72,11 @@ func (p *Parser) ParseStmts(end token.Token) (stmts []Stmt) {
 			p.NextToken()
 			continue
 		case token.IDENTITY:
-			// 变量 (赋值 or 引用)
+			// 变量 (定义 or 赋值)
 			stmts = append(stmts, p.parseAssignStatement())
+		case token.FN:
+			// 方法定义
+			defFn()
 		default:
 			// 表达式
 			stmts = append(stmts, p.parseExprStatement())
