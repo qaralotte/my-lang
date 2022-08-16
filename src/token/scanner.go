@@ -10,6 +10,7 @@ type Scanner struct {
 	src []byte
 
 	ch           rune // 当前读取的字符 (utf-8)
+	nearlyCh     byte // 下一个紧挨着的字符 (必定是 ascii)
 	offset       int  // 当前偏移位置
 	inlineOffset int  // 在行内偏移位置
 	lineOffset   int  // 偏移行位置
@@ -45,6 +46,13 @@ func (s *Scanner) next() {
 		s.ch = r
 		s.offset += w
 		s.inlineOffset += w
+
+		// 下一个紧挨着的字符
+		if s.offset <= len(s.src)-1 {
+			s.nearlyCh = s.src[s.offset]
+		} else {
+			s.nearlyCh = 0
+		}
 	} else {
 		s.ch = eof
 	}
@@ -75,6 +83,14 @@ func (s *Scanner) isKeyword(identity string) Token {
 		}
 	}
 	return IDENTITY
+}
+
+func (s *Scanner) nextNearlyChar(ch byte) bool {
+	if s.nearlyCh == ch {
+		s.next()
+		return true
+	}
+	return false
 }
 
 // 扫描变量或者关键词字面量
@@ -140,7 +156,6 @@ func (s *Scanner) ScanNext() (tok Token, lit string) {
 
 	s.skipSpace()
 
-	lit = string(s.ch)
 	switch s.ch {
 	case eof:
 		tok = EOF
@@ -161,13 +176,33 @@ func (s *Scanner) ScanNext() (tok Token, lit string) {
 		tok = LPAREN
 	case ')':
 		tok = RPAREN
-	case '=':
-		tok = ASSIGN
+	case '.':
+		tok = DOT
 	case '\'':
 		tok, lit = s.scanString('\'')
 		return
 	case '"':
 		tok, lit = s.scanString('"')
+	case '=':
+		tok = ASSIGN
+		if s.nextNearlyChar('=') {
+			tok = EQ
+		}
+	case '!':
+		tok = NOT
+		if s.nextNearlyChar('=') {
+			tok = NQ
+		}
+	case '>':
+		tok = GT
+		if s.nextNearlyChar('=') {
+			tok = GE
+		}
+	case '<':
+		tok = LT
+		if s.nextNearlyChar('=') {
+			tok = LE
+		}
 	default:
 		if unicode.IsNumber(s.ch) {
 			// 如果是数字

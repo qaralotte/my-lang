@@ -17,6 +17,13 @@ const (
 	RPAREN    // )
 	ASSIGN    // =
 	DOT       // .
+	NOT       // !
+	EQ        // ==
+	NQ        // !=
+	GT        // >
+	GE        // >=
+	LT        // <
+	LE        // <=
 
 	IDENTITY  // abc
 	INTLIT    // 123
@@ -38,8 +45,15 @@ var tokens = map[Token]string{
 	SEMICOLON: ";",
 	LPAREN:    "(",
 	RPAREN:    ")",
-	ASSIGN:    "=",
 	DOT:       ".",
+	ASSIGN:    "=",
+	EQ:        "==",
+	NOT:       "!",
+	NQ:        "!=",
+	GT:        ">",
+	GE:        ">=",
+	LT:        "<",
+	LE:        "<=",
 
 	IDENTITY:  "IDENTITY",
 	INTLIT:    "INTLIT",

@@ -89,6 +89,12 @@ const (
 	SUB
 	MUL
 	DIV
+	EQ
+	NQ
+	GT
+	GE
+	LT
+	LE
 )
 
 func OperatorString(op int) string {
@@ -101,6 +107,18 @@ func OperatorString(op int) string {
 		return "*"
 	case DIV:
 		return "/"
+	case EQ:
+		return "=="
+	case NQ:
+		return "!="
+	case GT:
+		return ">"
+	case GE:
+		return ">="
+	case LT:
+		return "<"
+	case LE:
+		return "<="
 	}
 	return "nop"
 }
@@ -108,6 +126,8 @@ func OperatorString(op int) string {
 // 运算符优先级
 func priority(op int) int {
 	switch op {
+	case EQ, NQ, GT, GE, LT, LE:
+		return 2
 	case ADD, SUB:
 		return 3
 	case MUL, DIV:
@@ -125,10 +145,28 @@ func operator(tok token.Token) int {
 		return SUB
 	case token.STAR:
 		return MUL
-	case token.SLASH:
-		return DIV
+	case token.EQ:
+		return EQ
+	case token.NQ:
+		return NQ
+	case token.GT:
+		return GT
+	case token.GE:
+		return GE
+	case token.LT:
+		return LT
+	case token.LE:
+		return LE
 	}
 	return NOP
+}
+
+func isComparedOperator(op int) bool {
+	switch op {
+	case EQ, NQ, GT, GE, LT, LE:
+		return true
+	}
+	return false
 }
 
 func makeBinary(left Expr, op int, right Expr) *BinaryExpr {
@@ -173,6 +211,11 @@ func parseExpr(currentPriority int) (Expr, variable.Type) {
 		// 检查类型运算
 		if !variable.CanCalc(leftType, rightType) {
 			panic(fmt.Sprintf("错误: 类型 %s 不能与 类型 %s 计算", variable.TypeString(leftType), variable.TypeString(rightType)))
+		}
+
+		// 如果是比较运算符, 结果应该是bool类型
+		if isComparedOperator(op) {
+			leftType = variable.BOOL
 		}
 
 		//     node

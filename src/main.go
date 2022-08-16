@@ -11,6 +11,7 @@ import (
 func main() {
 
 	s := token.NewScanner(filepath.Join(os.Getenv("GOPATH"), "test.m"))
+
 	// printer.PrintTokens(s)
 
 	p := ast.NewParser(s)

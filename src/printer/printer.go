@@ -9,7 +9,11 @@ import (
 
 func PrintTokens(s *token.Scanner) {
 	for tok, lit := s.ScanNext(); tok != token.EOF; tok, lit = s.ScanNext() {
-		fmt.Printf("%s: %s\n", token.String(tok), lit)
+		fmt.Print(token.String(tok))
+		if lit != "" {
+			fmt.Printf(": %s", lit)
+		}
+		fmt.Println()
 	}
 }
 
