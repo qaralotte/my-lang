@@ -17,10 +17,11 @@ const (
 	RPAREN    // )
 	LBRACE    // {
 	RBRACE    // }
-	ASSIGN    // =
 	DOT       // .
-	NOT       // !
+	COMMA     // ,
+	ASSIGN    // =
 	EQ        // ==
+	NOT       // !
 	NQ        // !=
 	GT        // >
 	GE        // >=
@@ -51,6 +52,7 @@ var tokens = map[Token]string{
 	LBRACE:    "{",
 	RBRACE:    "}",
 	DOT:       ".",
+	COMMA:     ",",
 	ASSIGN:    "=",
 	EQ:        "==",
 	NOT:       "!",

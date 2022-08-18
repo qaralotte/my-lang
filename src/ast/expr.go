@@ -2,7 +2,6 @@ package ast
 
 import (
 	"fmt"
-	"my-compiler/object"
 	"my-compiler/token"
 )
 
@@ -20,63 +19,70 @@ type LitExpr struct {
 
 // IdentityExpr 变量
 type IdentityExpr struct {
-	Object object.Object
+	Object
 }
 
 func (*BinaryExpr) expr()   {}
 func (*LitExpr) expr()      {}
 func (*IdentityExpr) expr() {}
 
-// 解析 1 为何物, "str" 为何物, a 为何物
-func implExpr() (Expr, object.Type) {
+// ExprStmt 单表达式的语句
+type ExprStmt struct {
+	Expr
+}
 
-	switch globalParser.Token {
+func (*ExprStmt) stmt() {}
+
+// 解析 1 为何物, "str" 为何物, a 为何物
+func (p *Parser) implExpr() (Expr, Type) {
+
+	switch p.Token {
 	case token.LPAREN:
 		// 括号 (优先计算)
-		globalParser.NextToken()
-		node, typ := parseExpr(0)
+		p.nextToken()
+		node, typ := p.parseExpr(0)
 
-		globalParser.Require(token.RPAREN, false)
+		p.require(token.RPAREN, false)
 		return node, typ
 	case token.IDENTITY:
 		// 变量
-		obj := object.FindObject(globalParser.Objects, globalParser.Lit)
+		obj := p.Objects.findObject(p.Lit)
 		if obj == nil {
 			// 如果变量表里没有此变量，直接报错
-			panic(fmt.Sprintf("错误: 找不到变量: %s", globalParser.Lit))
+			panic(fmt.Sprintf("错误: 找不到变量: %s", p.Lit))
 		}
 
 		return &IdentityExpr{
 			Object: obj,
-		}, object.GetType(obj)
+		}, getObjectType(obj)
 	case token.INTLIT:
 		// 整数
 		var node LitExpr
-		node.Lit = globalParser.Lit
-		return &node, object.INT
+		node.Lit = p.Lit
+		return &node, INT
 	case token.FLOATLIT:
 		// 数字
 		var node LitExpr
-		node.Lit = globalParser.Lit
-		return &node, object.FLOAT
+		node.Lit = p.Lit
+		return &node, FLOAT
 	case token.STRINGLIT:
 		// 字符串
 		var node LitExpr
-		node.Lit = globalParser.Lit
-		return &node, object.STRING
+		node.Lit = p.Lit
+		return &node, STRING
 	case token.TRUE, token.FALSE:
 		// 布尔值
 		var node LitExpr
-		node.Lit = globalParser.Lit
-		return &node, object.BOOL
+		node.Lit = p.Lit
+		return &node, BOOL
 	}
 
-	panic(fmt.Sprintf("错误: 表达式未知的 token: %s", token.String(globalParser.Token)))
+	panic(fmt.Sprintf("错误: 表达式未知的 token: %s", token.String(p.Token)))
 }
 
 // 表达式结尾符
-func endExpr() bool {
-	switch globalParser.Token {
+func (p *Parser) endExpr() bool {
+	switch p.Token {
 	case token.LINEBREAK, token.SEMICOLON, token.RPAREN, token.EOF:
 		return true
 	}
@@ -179,44 +185,44 @@ func makeBinary(left Expr, op int, right Expr) *BinaryExpr {
 }
 
 // ParseExpr 表达式解析
-func parseExpr(currentPriority int) (Expr, object.Type) {
+func (p *Parser) parseExpr(currentPriority int) (Expr, Type) {
 	var left, right Expr
-	var leftType, rightType object.Type
+	var leftType, rightType Type
 
 	// 从左边开始解析
 	// [1] + 2 + 3
-	left, leftType = implExpr()
+	left, leftType = p.implExpr()
 	if left == nil {
 		return left, leftType
 	}
 
-	globalParser.NextToken()
-	if endExpr() {
+	p.nextToken()
+	if p.endExpr() {
 		return left, leftType
 	}
 
 	// 1 [+] 2 + 3
-	op := operator(globalParser.Token)
+	op := operator(p.Token)
 	for priority(op) > currentPriority {
-		globalParser.NextToken()
+		p.nextToken()
 
 		// 1 + [2 + 3]
-		right, rightType = parseExpr(currentPriority)
+		right, rightType = p.parseExpr(currentPriority)
 		if right == nil {
 			panic("表达式错误")
 		}
 
 		// 向下合并类型
-		object.Merge(&leftType, &rightType)
+		tryMerge(&leftType, &rightType)
 
 		// 检查类型运算
-		if !object.CanCalc(leftType, rightType) {
-			panic(fmt.Sprintf("错误: 类型 %s 不能与 类型 %s 计算", object.TypeString(leftType), object.TypeString(rightType)))
+		if !canCalc(leftType, rightType) {
+			panic(fmt.Sprintf("错误: 类型 %s 不能与 类型 %s 计算", TypeString(leftType), TypeString(rightType)))
 		}
 
 		// 如果是比较运算符, 结果应该是bool类型
 		if isComparedOperator(op) {
-			leftType = object.BOOL
+			leftType = BOOL
 		}
 
 		//     node
@@ -225,7 +231,7 @@ func parseExpr(currentPriority int) (Expr, object.Type) {
 
 		left = makeBinary(left, op, right)
 
-		if endExpr() {
+		if p.endExpr() {
 			return left, leftType
 		}
 	}

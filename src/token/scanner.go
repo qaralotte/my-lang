@@ -182,6 +182,8 @@ func (s *Scanner) ScanNext() (tok Token, lit string) {
 		tok = RBRACE
 	case '.':
 		tok = DOT
+	case ',':
+		tok = COMMA
 	case '\'':
 		tok, lit = s.scanString('\'')
 		return

@@ -1,4 +1,4 @@
-package object
+package ast
 
 import "fmt"
 
@@ -10,6 +10,7 @@ const (
 	FLOAT
 	STRING
 	BOOL
+	VOID
 )
 
 func TypeString(t Type) string {
@@ -24,12 +25,14 @@ func TypeString(t Type) string {
 		return "string"
 	case BOOL:
 		return "bool"
+	case VOID:
+		return "void"
 	}
 	panic(fmt.Sprintf("错误: 未知类型 %d", t))
 }
 
 // Merge 如果可以的话，类型应该向下合并
-func Merge(typ1 *Type, typ2 *Type) {
+func tryMerge(typ1 *Type, typ2 *Type) {
 
 	// 如果两个类型其中一个是float类型，而另一个是int类型，则将int转换成float
 	if *typ1 == INT && *typ2 == FLOAT {
@@ -42,7 +45,7 @@ func Merge(typ1 *Type, typ2 *Type) {
 }
 
 // CanCalc 两个类型之间是否可以计算
-func CanCalc(typ1 Type, typ2 Type) bool {
+func canCalc(typ1 Type, typ2 Type) bool {
 
 	// 如果两个类型中有一个是none，则不可以计算
 	if typ1 == NONE || typ2 == NONE {
