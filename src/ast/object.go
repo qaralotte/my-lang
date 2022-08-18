@@ -102,6 +102,7 @@ func (objs *ObjectList) findObject(name string) Object {
 
 }
 
+// 获取对象名称
 func getObjectName(obj Object) string {
 	switch obj.(type) {
 	case *Variable:
@@ -112,6 +113,7 @@ func getObjectName(obj Object) string {
 	panic("错误: 非法的对象名称获取")
 }
 
+// 获取对象类型
 func getObjectType(obj Object) Type {
 	switch obj.(type) {
 	case *Variable:
