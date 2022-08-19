@@ -3,13 +3,17 @@ package ast
 import (
 	"fmt"
 	"my-compiler/token"
+	"reflect"
 )
 
-// AssignStmt 赋值表达式
-type AssignStmt struct {
-	Object
-	Right Expr
-}
+type (
+
+	// AssignStmt 赋值表达式
+	AssignStmt struct {
+		Object
+		Right Expr
+	}
+)
 
 func (*AssignStmt) stmt() {}
 
@@ -31,6 +35,23 @@ func (p *Parser) identity() Object {
 	}
 
 	panic(fmt.Sprintf("错误: 表达式未知的 token: %s", token.String(p.Token)))
+}
+
+func (p *Parser) setReturnValue() {
+	p.require(token.RETURN, true)
+
+	expr, _ := p.parseExpr(0)
+
+	parent := p.Objects.getParentObject()
+	if parent == nil {
+		panic(fmt.Sprintf("错误: 不合法的 return 使用场合"))
+	}
+
+	ret, isExsit := getObjectField(parent, "Return")
+	if !isExsit {
+		panic(fmt.Sprintf("错误: 不合法的 return 使用场合"))
+	}
+	ret.Set(reflect.ValueOf(expr))
 }
 
 // ParseExprStatement 表达式语句 (语句里只包含表达式)

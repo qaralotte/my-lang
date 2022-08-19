@@ -22,9 +22,16 @@ type IdentityExpr struct {
 	Object
 }
 
+// CallFnExpr 调用方法
+type CallFnExpr struct {
+	Fn     *Function
+	Params []Object
+}
+
 func (*BinaryExpr) expr()   {}
 func (*LitExpr) expr()      {}
 func (*IdentityExpr) expr() {}
+func (*CallFnExpr) expr()   {}
 
 // ExprStmt 单表达式的语句
 type ExprStmt struct {
@@ -52,9 +59,14 @@ func (p *Parser) implExpr() (Expr, Type) {
 			panic(fmt.Sprintf("错误: 找不到变量: %s", p.Lit))
 		}
 
+		typ, isExsit := getObjectField(obj, "Type")
+		if !isExsit {
+			panic(fmt.Sprintf("错误: 无法获取变量 %s 的类型", p.Lit))
+		}
+
 		return &IdentityExpr{
 			Object: obj,
-		}, getObjectType(obj)
+		}, typ.Interface().(Type)
 	case token.INTLIT:
 		// 整数
 		var node LitExpr

@@ -47,9 +47,9 @@ func tryMerge(typ1 *Type, typ2 *Type) {
 // CanCalc 两个类型之间是否可以计算
 func canCalc(typ1 Type, typ2 Type) bool {
 
-	// 如果两个类型中有一个是none，则不可以计算
+	// 如果两个类型中有一个是 none，则到运行时才可以判定是否可以计算，编译期暂时通过
 	if typ1 == NONE || typ2 == NONE {
-		return false
+		return true
 	}
 
 	// 如果两个类型是int或者float，可以计算

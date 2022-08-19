@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"reflect"
+)
+
 type (
 	Object interface {
 		obj()
@@ -18,10 +22,10 @@ type (
 
 	// Function 方法
 	Function struct {
-		Variable             // 基本信息
-		Args     []Object    // 方法参数
-		Objects  *ObjectList // 方法局部对象表
-		Stmts    []Stmt      // 方法内语句
+		Name    string
+		Objects *ObjectList // 方法局部对象表
+		Stmts   []Stmt      // 方法内语句
+		Return  Expr        // 返回值
 	}
 
 	// Channel 通道 (建立两个对象表的联系)
@@ -49,15 +53,12 @@ func NewVariable(name string) *Variable {
 	}
 }
 
-func NewFunction(name string, args []Object, parent *ObjectList) *Function {
+func NewFunction(name string, parent *ObjectList) *Function {
 	return &Function{
-		Variable: Variable{
-			Type: VOID,
-			Name: name,
-		},
-		Args:    args,
+		Name:    name,
 		Objects: NewObjectList(parent),
 		Stmts:   nil,
+		Return:  nil,
 	}
 }
 
@@ -65,6 +66,15 @@ func NewChannel(next *ObjectList) *Channel {
 	return &Channel{
 		Next: next,
 	}
+}
+
+// 获取对象名称
+func getObjectField(obj Object, field string) (reflect.Value, bool) {
+	f := reflect.ValueOf(obj).Elem().FieldByName(field)
+	if f.Kind() == reflect.Invalid {
+		return f, false
+	}
+	return f, true
 }
 
 // 获取对象表指定下标的对象
@@ -77,17 +87,32 @@ func (objs *ObjectList) add(object Object) {
 	*objs.Objects = append(*objs.Objects, object)
 }
 
+// 往对象表里插入新对象
+func (objs *ObjectList) addBatch(object []Object) {
+	*objs.Objects = append(*objs.Objects, object...)
+}
+
+func (objs *ObjectList) size() int {
+	return len(*objs.Objects)
+}
+
 // 倒序查找当前对象表，如果没有找到对象，则往上一层继续找
 func (objs *ObjectList) findObject(name string) Object {
 	// 如果表里没有任何变量，直接返回 nil
-	if len(*objs.Objects) == 0 {
+	if objs.size() == 0 {
 		return nil
 	}
 
 	// 从后往前遍历
-	for i := len(*objs.Objects) - 1; i > 0; i-- {
+	for i := objs.size() - 1; i > 0; i-- {
 		// 根据对象类型来判断
-		if name == getObjectName(objs.get(i)) {
+		fieldName, isExsit := getObjectField(objs.get(i), "Name")
+		if !isExsit {
+			// 如果不存在 Name 字段，则跳过检查
+			continue
+		}
+
+		if name == fieldName.String() {
 			return objs.get(i)
 		}
 	}
@@ -102,24 +127,11 @@ func (objs *ObjectList) findObject(name string) Object {
 
 }
 
-// 获取对象名称
-func getObjectName(obj Object) string {
-	switch obj.(type) {
-	case *Variable:
-		return obj.(*Variable).Name
-	case *Function:
-		return obj.(*Function).Name
+// 获取父对象 (外部对象)
+func (objs *ObjectList) getParentObject() Object {
+	parentObjs := objs.get(0).(*Channel).Next
+	if parentObjs == nil {
+		return nil
 	}
-	panic("错误: 非法的对象名称获取")
-}
-
-// 获取对象类型
-func getObjectType(obj Object) Type {
-	switch obj.(type) {
-	case *Variable:
-		return obj.(*Variable).Type
-	case *Function:
-		return obj.(*Function).Type
-	}
-	panic("错误: 非法的对象类型获取")
+	return parentObjs.get(parentObjs.size() - 1)
 }

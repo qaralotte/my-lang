@@ -7,7 +7,8 @@ f = true
 g = 1 == 2 + 3
 c = 1+2+3
 
-fn h() {
-    c = 'FAQ Nvidia'
+fn h(a, b, c, z) {
+    c = 'So, NVIDIA, FAQ'
     i = 123 + 456
+    return z + 789
 }

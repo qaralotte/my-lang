@@ -80,11 +80,9 @@ func PrintObject(indentation int, obj ast.Object) {
 		fmt.Printf("[Variable] type: %s, name: %s\n", ast.TypeString(o.Type), o.Name)
 	case *ast.Function:
 		o := obj.(*ast.Function)
-		fmt.Printf("[Function] type: %s, name: %s\n", ast.TypeString(o.Type), o.Name)
-		for i := 0; i < len(o.Args); i++ {
-			PrintObject(indentation+1, o.Args[i])
-		}
+		fmt.Printf("[Function] name: %s\n", o.Name)
 		PrintStmts(indentation+1, o.Stmts)
+		PrintReturn(indentation+1, o.Return)
 	}
 }
 
@@ -97,4 +95,13 @@ func PrintObjectList(indentation int, objs *ast.ObjectList) {
 	for i := 1; i < len(*objs.Objects); i++ {
 		PrintObject(indentation+1, (*objs.Objects)[i])
 	}
+}
+
+func PrintReturn(indentation int, ret ast.Expr) {
+	for i := 0; i < indentation; i++ {
+		fmt.Print("  ")
+	}
+
+	fmt.Println("[Return]")
+	PrintExpr(indentation+1, ret)
 }

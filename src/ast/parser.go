@@ -8,11 +8,10 @@ import (
 type Parser struct {
 	*token.Scanner // token 扫描器
 
-	token.Token        // 当前定位的 token
-	Lit         string // 当前 token 的文字标识
-
-	Stmts   []Stmt      // 语句
-	Objects *ObjectList // 对象表
+	token.Token             // 当前定位 token
+	Lit         string      // 当前文字标识
+	Stmts       []Stmt      // 当前语句
+	Objects     *ObjectList // 当前对象表
 }
 
 func NewParser(scanner *token.Scanner) *Parser {
@@ -67,6 +66,9 @@ func (p *Parser) ParseStmts(end token.Token) (stmts []Stmt) {
 		case token.FN:
 			// 方法定义
 			p.defFn()
+		case token.RETURN:
+			// 退出作用域并返回结果
+			p.setReturnValue()
 		default:
 			// 表达式
 			stmts = append(stmts, p.parseExprStatement())
