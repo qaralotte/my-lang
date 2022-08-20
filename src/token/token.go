@@ -37,6 +37,7 @@ const (
 	FALSE
 	FN
 	RETURN
+	PRINT
 )
 
 var tokens = map[Token]string{
@@ -72,6 +73,7 @@ var tokens = map[Token]string{
 	FALSE:  "false",
 	FN:     "fn",
 	RETURN: "return",
+	PRINT:  "print",
 }
 
 func String(token Token) string {
@@ -89,4 +91,5 @@ var Keywords = []KeywordPair{
 	{"false", FALSE},
 	{"fn", FN},
 	{"return", RETURN},
+	{"print", PRINT},
 }

@@ -8,14 +8,26 @@ import (
 
 type (
 
-	// AssignStmt 赋值表达式
+	// ExprStmt 单表达式的语句
+	ExprStmt struct {
+		Expr
+	}
+
+	// AssignStmt 赋值表达式 deprecated
 	AssignStmt struct {
 		Object
 		Right Expr
 	}
+
+	// PrintStmt 打印 (暂时) deprecated
+	PrintStmt struct {
+		Expr
+	}
 )
 
+func (*ExprStmt) stmt()   {}
 func (*AssignStmt) stmt() {}
+func (*PrintStmt) stmt()  {}
 
 // 获取当前token的identity
 func (p *Parser) identity() Object {
@@ -54,7 +66,26 @@ func (p *Parser) setReturnValue() {
 	ret.Set(reflect.ValueOf(expr))
 }
 
-// ParseExprStatement 表达式语句 (语句里只包含表达式)
+func (p *Parser) assign() {
+	va := p.identity().(*Variable)
+
+	op := p.Token
+	p.nextToken()
+
+	if op == token.EOF || op == token.LINEBREAK {
+		panic("非法的变量定义语法")
+	}
+
+	if op == token.ASSIGN {
+		expr, typ := p.parseExpr(0)
+		va.Type = typ
+		va.Value = expr
+	} else {
+		panic(fmt.Sprintf("非法符号: %s", token.String(op)))
+	}
+}
+
+// 表达式语句 (语句里只包含表达式)
 func (p *Parser) parseExprStatement() *ExprStmt {
 	expr, _ := p.parseExpr(0)
 	return &ExprStmt{
@@ -62,7 +93,7 @@ func (p *Parser) parseExprStatement() *ExprStmt {
 	}
 }
 
-// parseAssignStatement 赋值语句
+// 赋值语句
 func (p *Parser) parseAssignStatement() *AssignStmt {
 
 	left := p.identity().(*Variable)
@@ -84,6 +115,17 @@ func (p *Parser) parseAssignStatement() *AssignStmt {
 		}
 	} else {
 		panic(fmt.Sprintf("非法符号: %s", token.String(op)))
+	}
+
+}
+
+func (p *Parser) parsePrintStatement() *PrintStmt {
+
+	p.require(token.PRINT, true)
+
+	expr, _ := p.parseExpr(0)
+	return &PrintStmt{
+		Expr: expr,
 	}
 
 }

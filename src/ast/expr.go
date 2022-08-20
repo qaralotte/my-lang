@@ -14,6 +14,7 @@ type BinaryExpr struct {
 
 // LitExpr 字面量
 type LitExpr struct {
+	Type
 	Lit string
 }
 
@@ -32,13 +33,6 @@ func (*BinaryExpr) expr()   {}
 func (*LitExpr) expr()      {}
 func (*IdentityExpr) expr() {}
 func (*CallFnExpr) expr()   {}
-
-// ExprStmt 单表达式的语句
-type ExprStmt struct {
-	Expr
-}
-
-func (*ExprStmt) stmt() {}
 
 // 解析 1 为何物, "str" 为何物, a 为何物
 func (p *Parser) implExpr() (Expr, Type) {
@@ -69,24 +63,28 @@ func (p *Parser) implExpr() (Expr, Type) {
 		}, typ.Interface().(Type)
 	case token.INTLIT:
 		// 整数
-		var node LitExpr
-		node.Lit = p.Lit
-		return &node, INT
+		return &LitExpr{
+			Type: INT,
+			Lit:  p.Lit,
+		}, INT
 	case token.FLOATLIT:
-		// 数字
-		var node LitExpr
-		node.Lit = p.Lit
-		return &node, FLOAT
+		// 浮点数
+		return &LitExpr{
+			Type: FLOAT,
+			Lit:  p.Lit,
+		}, FLOAT
 	case token.STRINGLIT:
 		// 字符串
-		var node LitExpr
-		node.Lit = p.Lit
-		return &node, STRING
+		return &LitExpr{
+			Type: STRING,
+			Lit:  p.Lit,
+		}, STRING
 	case token.TRUE, token.FALSE:
 		// 布尔值
-		var node LitExpr
-		node.Lit = p.Lit
-		return &node, BOOL
+		return &LitExpr{
+			Type: BOOL,
+			Lit:  p.Lit,
+		}, BOOL
 	}
 
 	panic(fmt.Sprintf("错误: 表达式未知的 token: %s", token.String(p.Token)))
@@ -228,8 +226,8 @@ func (p *Parser) parseExpr(currentPriority int) (Expr, Type) {
 		tryMerge(&leftType, &rightType)
 
 		// 检查类型运算
-		if !canCalc(leftType, rightType) {
-			panic(fmt.Sprintf("错误: 类型 %s 不能与 类型 %s 计算", TypeString(leftType), TypeString(rightType)))
+		if !canCalc(op, leftType, rightType) {
+			panic(fmt.Sprintf("错误: 不合法的计算 %s %s %s", TypeString(leftType), OperatorString(op), TypeString(rightType)))
 		}
 
 		// 如果是比较运算符, 结果应该是bool类型

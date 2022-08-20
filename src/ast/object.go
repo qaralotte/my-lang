@@ -17,7 +17,8 @@ type (
 	// Variable 变量
 	Variable struct {
 		Type
-		Name string
+		Name  string
+		Value Expr
 	}
 
 	// Function 方法
@@ -48,8 +49,9 @@ func NewObjectList(previous *ObjectList) *ObjectList {
 
 func NewVariable(name string) *Variable {
 	return &Variable{
-		Type: NONE,
-		Name: name,
+		Type:  NONE,
+		Name:  name,
+		Value: nil,
 	}
 }
 

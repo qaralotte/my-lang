@@ -62,13 +62,16 @@ func (p *Parser) ParseStmts(end token.Token) (stmts []Stmt) {
 			continue
 		case token.IDENTITY:
 			// 变量 (定义 or 赋值)
-			stmts = append(stmts, p.parseAssignStatement())
+			p.assign()
+			// stmts = append(stmts, p.parseAssignStatement())
 		case token.FN:
 			// 方法定义
 			p.defFn()
 		case token.RETURN:
 			// 退出作用域并返回结果
 			p.setReturnValue()
+		case token.PRINT:
+			stmts = append(stmts, p.parsePrintStatement())
 		default:
 			// 表达式
 			stmts = append(stmts, p.parseExprStatement())

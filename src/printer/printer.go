@@ -55,6 +55,11 @@ func PrintStmt(indentation int, stmt ast.Stmt) {
 		fmt.Println("[AssignStmt]")
 		PrintObject(indentation+1, stmt.Object)
 		PrintExpr(indentation+1, stmt.Right)
+	case *ast.PrintStmt:
+		stmt := stmt.(*ast.PrintStmt)
+		fmt.Println("[PrintStmt]")
+		PrintExpr(indentation+1, stmt.Expr)
+
 	}
 }
 
@@ -78,6 +83,7 @@ func PrintObject(indentation int, obj ast.Object) {
 	case *ast.Variable:
 		o := obj.(*ast.Variable)
 		fmt.Printf("[Variable] type: %s, name: %s\n", ast.TypeString(o.Type), o.Name)
+		PrintExpr(indentation+1, o.Value)
 	case *ast.Function:
 		o := obj.(*ast.Function)
 		fmt.Printf("[Function] name: %s\n", o.Name)

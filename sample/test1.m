@@ -12,3 +12,6 @@ fn h(a, b, c, z) {
     i = 123 + 456
     return z + 789
 }
+
+j = 'poi'
+j =j + 'd'
