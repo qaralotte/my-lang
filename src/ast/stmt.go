@@ -3,7 +3,6 @@ package ast
 import (
 	"fmt"
 	"my-compiler/token"
-	"reflect"
 )
 
 type (
@@ -23,11 +22,16 @@ type (
 	PrintStmt struct {
 		Expr
 	}
+
+	ReturnStmt struct {
+		Expr
+	}
 )
 
 func (*ExprStmt) stmt()   {}
 func (*AssignStmt) stmt() {}
 func (*PrintStmt) stmt()  {}
+func (*ReturnStmt) stmt() {}
 
 // 获取当前token的identity
 func (p *Parser) identity() Object {
@@ -47,23 +51,6 @@ func (p *Parser) identity() Object {
 	}
 
 	panic(fmt.Sprintf("错误: 表达式未知的 token: %s", token.String(p.Token)))
-}
-
-func (p *Parser) setReturnValue() {
-	p.require(token.RETURN, true)
-
-	expr, _ := p.parseExpr(0)
-
-	parent := p.Objects.getParentObject()
-	if parent == nil {
-		panic(fmt.Sprintf("错误: 不合法的 return 使用场合"))
-	}
-
-	ret, isExsit := getObjectField(parent, "Return")
-	if !isExsit {
-		panic(fmt.Sprintf("错误: 不合法的 return 使用场合"))
-	}
-	ret.Set(reflect.ValueOf(expr))
 }
 
 func (p *Parser) assign() {
@@ -128,4 +115,19 @@ func (p *Parser) parsePrintStatement() *PrintStmt {
 		Expr: expr,
 	}
 
+}
+
+func (p *Parser) parseReturnStatement() *ReturnStmt {
+
+	p.require(token.RETURN, true)
+
+	parent := p.Objects.getParentObject()
+	if parent == nil {
+		panic(fmt.Sprintf("错误: 不合法的 return 使用场合"))
+	}
+
+	expr, _ := p.parseExpr(0)
+	return &ReturnStmt{
+		Expr: expr,
+	}
 }

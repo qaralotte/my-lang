@@ -26,7 +26,6 @@ type (
 		Name    string
 		Objects *ObjectList // 方法局部对象表
 		Stmts   []Stmt      // 方法内语句
-		Return  Expr        // 返回值
 	}
 
 	// Channel 通道 (建立两个对象表的联系)
@@ -49,7 +48,7 @@ func NewObjectList(previous *ObjectList) *ObjectList {
 
 func NewVariable(name string) *Variable {
 	return &Variable{
-		Type:  NONE,
+		Type:  VOLATILE,
 		Name:  name,
 		Value: nil,
 	}
@@ -60,7 +59,6 @@ func NewFunction(name string, parent *ObjectList) *Function {
 		Name:    name,
 		Objects: NewObjectList(parent),
 		Stmts:   nil,
-		Return:  nil,
 	}
 }
 

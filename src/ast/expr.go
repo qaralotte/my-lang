@@ -49,8 +49,8 @@ func (p *Parser) implExpr() (Expr, Type) {
 		// 变量
 		obj := p.Objects.findObject(p.Lit)
 		if obj == nil {
-			// 如果变量表里没有此变量，直接报错
-			panic(fmt.Sprintf("错误: 找不到变量: %s", p.Lit))
+			// 如果对象表里没有此对象，直接报错
+			panic(fmt.Sprintf("错误: 找不到对象: %s", p.Lit))
 		}
 
 		typ, isExsit := getObjectField(obj, "Type")

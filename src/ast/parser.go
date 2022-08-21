@@ -69,7 +69,7 @@ func (p *Parser) ParseStmts(end token.Token) (stmts []Stmt) {
 			p.defFn()
 		case token.RETURN:
 			// 退出作用域并返回结果
-			p.setReturnValue()
+			stmts = append(stmts, p.parseReturnStatement())
 		case token.PRINT:
 			stmts = append(stmts, p.parsePrintStatement())
 		default:

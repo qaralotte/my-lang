@@ -5,7 +5,7 @@ import "fmt"
 type Type int
 
 const (
-	NONE Type = iota
+	VOLATILE Type = iota
 	INT
 	FLOAT
 	STRING
@@ -14,8 +14,8 @@ const (
 
 func TypeString(t Type) string {
 	switch t {
-	case NONE:
-		return "none"
+	case VOLATILE:
+		return "volatile"
 	case INT:
 		return "int"
 	case FLOAT:
@@ -53,7 +53,7 @@ func canCalc(op int, typ1 Type, typ2 Type) bool {
 	}
 
 	// 如果两个类型中有一个是 none，则到运行时才可以判定是否可以计算，编译期暂时通过
-	if typ1 == NONE || typ2 == NONE {
+	if typ1 == VOLATILE || typ2 == VOLATILE {
 		return true
 	}
 

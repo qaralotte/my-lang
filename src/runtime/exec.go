@@ -59,6 +59,8 @@ func (e *Exec) expr(expr ast.Expr) interface{} {
 			if leftType == rightType && leftType == "float64" {
 				return e.expr(expr.Left).(float64) + e.expr(expr.Right).(float64)
 			}
+
+			panic("错误")
 		case ast.SUB:
 			// 整数相减: 1 - 2 = -1
 			if leftType == rightType && leftType == "int64" {

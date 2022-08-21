@@ -17,6 +17,10 @@ func PrintTokens(s *token.Scanner) {
 }
 
 func PrintExpr(indentation int, expr ast.Expr) {
+	if expr == nil {
+		return
+	}
+
 	for i := 0; i < indentation; i++ {
 		fmt.Print("  ")
 	}
@@ -41,6 +45,7 @@ func PrintExpr(indentation int, expr ast.Expr) {
 }
 
 func PrintStmt(indentation int, stmt ast.Stmt) {
+
 	for i := 0; i < indentation; i++ {
 		fmt.Print("  ")
 	}
@@ -59,7 +64,10 @@ func PrintStmt(indentation int, stmt ast.Stmt) {
 		stmt := stmt.(*ast.PrintStmt)
 		fmt.Println("[PrintStmt]")
 		PrintExpr(indentation+1, stmt.Expr)
-
+	case *ast.ReturnStmt:
+		stmt := stmt.(*ast.ReturnStmt)
+		fmt.Println("[ReturnStmt]")
+		PrintExpr(indentation+1, stmt.Expr)
 	}
 }
 
@@ -75,6 +83,10 @@ func PrintStmts(indentation int, stmts []ast.Stmt) {
 }
 
 func PrintObject(indentation int, obj ast.Object) {
+	if obj == nil {
+		return
+	}
+
 	for i := 0; i < indentation; i++ {
 		fmt.Print("  ")
 	}
@@ -88,7 +100,6 @@ func PrintObject(indentation int, obj ast.Object) {
 		o := obj.(*ast.Function)
 		fmt.Printf("[Function] name: %s\n", o.Name)
 		PrintStmts(indentation+1, o.Stmts)
-		PrintReturn(indentation+1, o.Return)
 	}
 }
 
@@ -101,13 +112,4 @@ func PrintObjectList(indentation int, objs *ast.ObjectList) {
 	for i := 1; i < len(*objs.Objects); i++ {
 		PrintObject(indentation+1, (*objs.Objects)[i])
 	}
-}
-
-func PrintReturn(indentation int, ret ast.Expr) {
-	for i := 0; i < indentation; i++ {
-		fmt.Print("  ")
-	}
-
-	fmt.Println("[Return]")
-	PrintExpr(indentation+1, ret)
 }
