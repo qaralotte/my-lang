@@ -5,16 +5,30 @@ import (
 	"my-compiler/token"
 )
 
+// 跳过方法内语句
+func (p *Parser) skipBlock() {
+	level := 0 // block 层数
+	for p.Token != token.RBRACE || level != 0 {
+		if p.Token == token.LPAREN {
+			level += 1
+		}
+
+		if p.Token == token.RPAREN {
+			level -= 1
+		}
+
+		p.nextToken()
+	}
+}
+
 // 定义方法参数
-func (p *Parser) defFnArgs() (args []Object) {
+func (p *Parser) defFnArgs() (args []string) {
 
 	// ([a, b, c])
 	for p.Token != token.RPAREN {
 		// ([a], ...)
-		// 对于每一个局部变量定义，都应该创建新的
 		name := p.require(token.IDENTITY, true)
-		va := NewVariable(name)
-		args = append(args, va)
+		args = append(args, name)
 
 		// (a[,] ...)
 		// 如果是逗号，则说明后面还有参数定义
@@ -43,22 +57,16 @@ func (p *Parser) defFn() {
 	p.Objects.add(fn)
 
 	// fn name[(...)] {...}
-	args := make([]Object, 0)
 	if p.Token == token.LPAREN {
 		p.nextToken()
-		args = p.defFnArgs()
+		fn.Args = p.defFnArgs()
 		p.require(token.RPAREN, true)
 	}
-	fn.Objects.addBatch(args)
 
 	// fn name(...) [{]...}
+	fn.Status = p.GetStatus()
 	p.require(token.LBRACE, true)
-	// 设置当前对象表为方法内局部对象表
-	p.Objects = fn.Objects
-	// todo GET AST
-	fn.Stmts = p.ParseStmts(token.RBRACE)
-	// 设置当前对象表为方法外全局对象表
-	p.Objects = p.Objects.get(0).(*Channel).Next
+	p.skipBlock()
 	// fn name(...) {...[}]
 	p.require(token.RBRACE, true)
 }

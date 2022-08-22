@@ -98,8 +98,7 @@ func PrintObject(indentation int, obj ast.Object) {
 		PrintExpr(indentation+1, o.Value)
 	case *ast.Function:
 		o := obj.(*ast.Function)
-		fmt.Printf("[Function] name: %s\n", o.Name)
-		PrintStmts(indentation+1, o.Stmts)
+		fmt.Printf("[Function] name: %s, args: %v\n", o.Name, o.Args)
 	}
 }
 

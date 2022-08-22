@@ -34,27 +34,22 @@ func (*PrintStmt) stmt()  {}
 func (*ReturnStmt) stmt() {}
 
 // 获取当前token的identity
-func (p *Parser) identity() Object {
-
+func (p *Parser) identity() (obj Object, name string) {
 	switch p.Token {
 	case token.IDENTITY:
 		// 变量 (且必须是变量)
-		va := p.Objects.findObject(p.Lit)
-		if va == nil {
-			// 如果变量表里没有此变量，则新建一个变量
-			va = NewVariable(p.Lit)
-			p.Objects.add(va)
-		}
+		obj = p.Objects.findObject(p.Lit)
+		name = p.Lit
 
 		p.nextToken()
-		return va
+		return
 	}
 
 	panic(fmt.Sprintf("错误: 表达式未知的 token: %s", token.String(p.Token)))
 }
 
 func (p *Parser) assign() {
-	va := p.identity().(*Variable)
+	obj, name := p.identity()
 
 	op := p.Token
 	p.nextToken()
@@ -65,8 +60,21 @@ func (p *Parser) assign() {
 
 	if op == token.ASSIGN {
 		expr, typ := p.parseExpr(0)
-		va.Type = typ
-		va.Value = expr
+		if obj == nil {
+			// 如果对象表没有对象，则新建一个
+			obj = &Variable{
+				Type:  typ,
+				Name:  name,
+				Value: expr,
+			}
+			p.Objects.add(obj)
+		} else {
+			// 如果对象表有对象，则修改
+			va := obj.(*Variable)
+			va.Type = typ
+			va.Value = expr
+		}
+
 	} else {
 		panic(fmt.Sprintf("非法符号: %s", token.String(op)))
 	}
@@ -78,32 +86,6 @@ func (p *Parser) parseExprStatement() *ExprStmt {
 	return &ExprStmt{
 		expr,
 	}
-}
-
-// 赋值语句
-func (p *Parser) parseAssignStatement() *AssignStmt {
-
-	left := p.identity().(*Variable)
-
-	op := p.Token
-	p.nextToken()
-
-	if op == token.EOF || op == token.LINEBREAK {
-		panic("非法的变量定义语法")
-	}
-
-	right, typ := p.parseExpr(0)
-	left.Type = typ
-
-	if op == token.ASSIGN {
-		return &AssignStmt{
-			Object: left,
-			Right:  right,
-		}
-	} else {
-		panic(fmt.Sprintf("非法符号: %s", token.String(op)))
-	}
-
 }
 
 func (p *Parser) parsePrintStatement() *PrintStmt {

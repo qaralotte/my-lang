@@ -7,8 +7,12 @@ import (
 )
 
 type Scanner struct {
-	src []byte
+	// todo 文件名
+	src    []byte // 源码
+	Status        // 状态
+}
 
+type Status struct {
 	ch           rune // 当前读取的字符 (utf-8)
 	nearlyCh     byte // 下一个紧挨着的字符 (必定是 ascii)
 	offset       int  // 当前偏移位置
@@ -23,11 +27,11 @@ func NewScanner(path string) (s *Scanner) {
 	var scanner Scanner
 
 	// 读取文件内容并存进 src
-	byt, err := os.ReadFile(path)
+	bytes, err := os.ReadFile(path)
 	if err != nil {
 		panic(err)
 	}
-	scanner.src = byt
+	scanner.src = bytes
 
 	scanner.next()
 	return &scanner
@@ -222,4 +226,12 @@ func (s *Scanner) ScanNext() (tok Token, lit string) {
 	}
 	s.next()
 	return
+}
+
+func (s *Scanner) GetStatus() Status {
+	return s.Status
+}
+
+func (s *Scanner) SetStatus(status Status) {
+	s.Status = status
 }

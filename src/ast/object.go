@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"my-compiler/token"
 	"reflect"
 )
 
@@ -23,9 +24,10 @@ type (
 
 	// Function 方法
 	Function struct {
-		Name    string
-		Objects *ObjectList // 方法局部对象表
-		Stmts   []Stmt      // 方法内语句
+		Name         string
+		Args         []string    // 局部变量
+		Objects      *ObjectList // 方法局部对象表
+		token.Status             // 仅记录状态不做语法分析
 	}
 
 	// Channel 通道 (建立两个对象表的联系)
@@ -57,8 +59,8 @@ func NewVariable(name string) *Variable {
 func NewFunction(name string, parent *ObjectList) *Function {
 	return &Function{
 		Name:    name,
+		Args:    make([]string, 0),
 		Objects: NewObjectList(parent),
-		Stmts:   nil,
 	}
 }
 

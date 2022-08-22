@@ -10,7 +10,7 @@ import (
 
 func main() {
 
-	s := token.NewScanner(filepath.Join(os.Getenv("GOPATH"), "sample", "test1.m"))
+	s := token.NewScanner(filepath.Join(os.Getenv("GOPATH"), "sample", "test3.m"))
 	p := ast.NewParser(s)
 
 	// printer.PrintTokens(s)
