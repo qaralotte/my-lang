@@ -2,6 +2,8 @@ package ast
 
 import "fmt"
 
+// Deprecated: 解释期不需要推断类型
+
 type Type int
 
 const (

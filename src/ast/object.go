@@ -1,7 +1,6 @@
 package ast
 
 import (
-	"my-compiler/token"
 	"reflect"
 )
 
@@ -17,17 +16,16 @@ type (
 
 	// Variable 变量
 	Variable struct {
-		Type
 		Name  string
 		Value Expr
 	}
 
 	// Function 方法
 	Function struct {
-		Name         string
-		Args         []string    // 局部变量
-		Objects      *ObjectList // 方法局部对象表
-		token.Status             // 仅记录状态不做语法分析
+		Name    string
+		Args    []string    // 局部变量
+		Objects *ObjectList // 方法局部对象表
+		Parser              // 仅记录状态不做语法分析
 	}
 
 	// Channel 通道 (建立两个对象表的联系)
@@ -50,7 +48,6 @@ func NewObjectList(previous *ObjectList) *ObjectList {
 
 func NewVariable(name string) *Variable {
 	return &Variable{
-		Type:  VOLATILE,
 		Name:  name,
 		Value: nil,
 	}
@@ -79,16 +76,6 @@ func getObjectField(obj Object, field string) (reflect.Value, bool) {
 	return f, true
 }
 
-// 获取对象表指定下标的对象
-func (objs *ObjectList) get(index int) Object {
-	return (*objs.Objects)[index]
-}
-
-// 往对象表里插入新对象
-func (objs *ObjectList) add(object Object) {
-	*objs.Objects = append(*objs.Objects, object)
-}
-
 // 往对象表里插入新对象
 func (objs *ObjectList) addBatch(object []Object) {
 	*objs.Objects = append(*objs.Objects, object...)
@@ -108,19 +95,19 @@ func (objs *ObjectList) findObject(name string) Object {
 	// 从后往前遍历
 	for i := objs.size() - 1; i > 0; i-- {
 		// 根据对象类型来判断
-		fieldName, isExsit := getObjectField(objs.get(i), "Name")
+		fieldName, isExsit := getObjectField(objs.Get(i), "Name")
 		if !isExsit {
 			// 如果不存在 Name 字段，则跳过检查
 			continue
 		}
 
 		if name == fieldName.String() {
-			return objs.get(i)
+			return objs.Get(i)
 		}
 	}
 
 	// 如果没有找到的话就往上一层查找
-	channel := objs.get(0).(*Channel)
+	channel := objs.Get(0).(*Channel)
 	if channel.Next != nil {
 		return channel.Next.findObject(name)
 	}
@@ -131,9 +118,23 @@ func (objs *ObjectList) findObject(name string) Object {
 
 // 获取父对象 (外部对象)
 func (objs *ObjectList) getParentObject() Object {
-	parentObjs := objs.get(0).(*Channel).Next
+	parentObjs := objs.Get(0).(*Channel).Next
 	if parentObjs == nil {
 		return nil
 	}
-	return parentObjs.get(parentObjs.size() - 1)
+	return parentObjs.Get(parentObjs.size() - 1)
+}
+
+// Get 获取对象表指定下标的对象
+func (objs *ObjectList) Get(index int) Object {
+	return (*objs.Objects)[index]
+}
+
+// Add 往对象表里插入新对象
+func (objs *ObjectList) Add(object Object) {
+	*objs.Objects = append(*objs.Objects, object)
+}
+
+func (objs *ObjectList) Clear() {
+	*objs.Objects = (*objs.Objects)[:1]
 }

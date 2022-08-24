@@ -2,7 +2,7 @@ package main
 
 import (
 	"my-compiler/ast"
-	"my-compiler/printer"
+	"my-compiler/rt"
 	"my-compiler/token"
 	"os"
 	"path/filepath"
@@ -15,9 +15,9 @@ func main() {
 
 	// printer.PrintTokens(s)
 	// printer.PrintStmts(0, p.Stmts)
-	printer.PrintObjectList(0, p.Objects)
+	// printer.PrintObjectList(0, p.Objects)
 
-	// e := runtime.NewExec(p)
-	// e.Run()
+	e := rt.NewExec(p)
+	e.Run()
 
 }

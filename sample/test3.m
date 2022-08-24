@@ -1,4 +1,6 @@
 fn f(a, b) {
-    print a
+    print a * b
+    return b + 5
 }
-a = a + 1
+c = f('Hello World ', 3)
+print c

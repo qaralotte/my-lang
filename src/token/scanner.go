@@ -8,11 +8,8 @@ import (
 
 type Scanner struct {
 	// todo 文件名
-	src    []byte // 源码
-	Status        // 状态
-}
+	src []byte // 源码
 
-type Status struct {
 	ch           rune // 当前读取的字符 (utf-8)
 	nearlyCh     byte // 下一个紧挨着的字符 (必定是 ascii)
 	offset       int  // 当前偏移位置
@@ -228,10 +225,22 @@ func (s *Scanner) ScanNext() (tok Token, lit string) {
 	return
 }
 
-func (s *Scanner) GetStatus() Status {
-	return s.Status
+func (s *Scanner) Copy() *Scanner {
+	return &Scanner{
+		src:          s.src,
+		ch:           s.ch,
+		nearlyCh:     s.nearlyCh,
+		offset:       s.offset,
+		inlineOffset: s.inlineOffset,
+		lineOffset:   s.lineOffset,
+	}
 }
 
-func (s *Scanner) SetStatus(status Status) {
-	s.Status = status
+func (s *Scanner) Load(ns *Scanner) {
+	s.src = ns.src
+	s.ch = ns.ch
+	s.nearlyCh = ns.nearlyCh
+	s.offset = ns.offset
+	s.inlineOffset = ns.inlineOffset
+	s.lineOffset = ns.lineOffset
 }

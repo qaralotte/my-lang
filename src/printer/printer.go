@@ -41,6 +41,15 @@ func PrintExpr(indentation int, expr ast.Expr) {
 		fmt.Printf("[BinaryExpr] Op: %s\n", ast.OperatorString(expr.Op))
 		PrintExpr(indentation+1, expr.Left)
 		PrintExpr(indentation+1, expr.Right)
+	case *ast.CallFnExpr:
+		// 调用方法
+		expr := expr.(*ast.CallFnExpr)
+		fmt.Println("[CallFnExpr]")
+		PrintObject(indentation+1, expr.Fn)
+		for i := 0; i < len(expr.Params); i++ {
+			PrintExpr(indentation+1, expr.Params[i])
+		}
+
 	}
 }
 
@@ -94,7 +103,7 @@ func PrintObject(indentation int, obj ast.Object) {
 	switch obj.(type) {
 	case *ast.Variable:
 		o := obj.(*ast.Variable)
-		fmt.Printf("[Variable] type: %s, name: %s\n", ast.TypeString(o.Type), o.Name)
+		fmt.Printf("[Variable] name: %s\n", o.Name)
 		PrintExpr(indentation+1, o.Value)
 	case *ast.Function:
 		o := obj.(*ast.Function)

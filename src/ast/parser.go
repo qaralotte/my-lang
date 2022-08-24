@@ -6,12 +6,11 @@ import (
 )
 
 type Parser struct {
-	*token.Scanner // token 扫描器
-
-	token.Token             // 当前定位 token
-	Lit         string      // 当前文字标识
-	Stmts       []Stmt      // 当前语句
-	Objects     *ObjectList // 当前对象表
+	*token.Scanner             // token 扫描器
+	token.Token                // 当前定位 token
+	Lit            string      // 当前文字标识
+	Stmts          []Stmt      // 当前语句
+	Objects        *ObjectList // 当前对象表
 }
 
 func NewParser(scanner *token.Scanner) *Parser {
@@ -61,9 +60,19 @@ func (p *Parser) ParseStmts(end token.Token) (stmts []Stmt) {
 			p.nextToken()
 			continue
 		case token.IDENTITY:
-			// 变量 (定义 or 赋值)
-			p.assign()
-			// stmts = append(stmts, p.parseAssignStatement())
+			oldParser := p.Copy()
+			name := p.Lit
+
+			p.nextToken()
+			if p.Token == token.ASSIGN {
+				// 如果是等于，则该变量定义且赋值
+				p.nextToken()
+				p.defVar(name)
+			} else {
+				// 如果是别的，则只是表达式
+				p.Load(oldParser)
+				stmts = append(stmts, p.parseExprStatement())
+			}
 		case token.FN:
 			// 方法定义
 			p.defFn()
@@ -78,4 +87,22 @@ func (p *Parser) ParseStmts(end token.Token) (stmts []Stmt) {
 		}
 	}
 	return
+}
+
+func (p *Parser) Copy() Parser {
+	return Parser{
+		Scanner: p.Scanner.Copy(),
+		Token:   p.Token,
+		Lit:     p.Lit,
+		Stmts:   p.Stmts,
+		Objects: p.Objects,
+	}
+}
+
+func (p *Parser) Load(np Parser) {
+	p.Scanner.Load(np.Scanner)
+	p.Token = np.Token
+	p.Lit = np.Lit
+	p.Stmts = np.Stmts
+	p.Objects = np.Objects
 }

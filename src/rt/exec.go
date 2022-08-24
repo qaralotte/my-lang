@@ -1,8 +1,9 @@
-package runtime
+package rt
 
 import (
 	"fmt"
 	"my-compiler/ast"
+	"my-compiler/token"
 	"reflect"
 	"strconv"
 	"unsafe"
@@ -73,6 +74,7 @@ func (e *Exec) expr(expr ast.Expr) interface{} {
 			}
 		case ast.MUL:
 
+			// 字符串乘整数: 'str' * 3 = 'strstrstr'
 			if leftType == "string" && rightType == "int64" {
 				result := ""
 				right := e.expr(expr.Right).(int64)
@@ -118,6 +120,46 @@ func (e *Exec) expr(expr ast.Expr) interface{} {
 	case *ast.IdentityExpr:
 		expr := expr.(*ast.IdentityExpr)
 		return e.expr(expr.Object.(*ast.Variable).Value)
+	case *ast.CallFnExpr:
+		expr := expr.(*ast.CallFnExpr)
+		return e.callFn(expr.Fn, expr.Params)
 	}
 	return nil
+}
+
+func (e *Exec) callFn(fn *ast.Function, params []ast.Expr) (value interface{}) {
+	oldParser := e.Parser.Copy()
+
+	// parser 定位到方法语句块内
+	e.Parser.Load(fn.Parser)
+
+	// 加载局部变量表
+	e.Parser.Objects = fn.Objects
+
+	// 将具体的表达式传入具体的参数上
+	for i := 0; i < len(params); i++ {
+		e.Parser.Objects.Add(&ast.Variable{
+			Name:  fn.Args[i],
+			Value: params[i],
+		})
+	}
+
+	// 开始语法分析
+	stmts := e.Parser.ParseStmts(token.RBRACE)
+	for _, stmt := range stmts {
+		if reflect.TypeOf(stmt).String() == "*ast.ReturnStmt" {
+			stmt := stmt.(*ast.ReturnStmt)
+			value = e.expr(stmt.Expr)
+			break
+		}
+		e.stmt(stmt)
+	}
+
+	// 清空局部变量表并返回到全局变量表
+	e.Parser.Objects.Clear()
+	e.Parser.Objects = e.Parser.Objects.Get(0).(*ast.Channel).Next
+
+	e.Parser.Load(oldParser)
+
+	return
 }

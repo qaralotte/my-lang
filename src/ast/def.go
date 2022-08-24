@@ -54,7 +54,7 @@ func (p *Parser) defFn() {
 
 	// 添加方法进对象表
 	fn := NewFunction(name, p.Objects)
-	p.Objects.add(fn)
+	p.Objects.Add(fn)
 
 	// fn name[(...)] {...}
 	if p.Token == token.LPAREN {
@@ -64,9 +64,19 @@ func (p *Parser) defFn() {
 	}
 
 	// fn name(...) [{]...}
-	fn.Status = p.GetStatus()
 	p.require(token.LBRACE, true)
+
+	fn.Parser = p.Copy()
 	p.skipBlock()
 	// fn name(...) {...[}]
 	p.require(token.RBRACE, true)
+}
+
+func (p *Parser) defVar(name string) {
+	expr := p.parseExpr(0)
+
+	p.Objects.Add(&Variable{
+		Name:  name,
+		Value: expr,
+	})
 }
