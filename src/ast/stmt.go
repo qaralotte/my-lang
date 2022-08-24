@@ -12,10 +12,10 @@ type (
 		Expr
 	}
 
-	// AssignStmt 赋值表达式 deprecated
+	// AssignStmt 赋值表达式
 	AssignStmt struct {
-		Object
-		Right Expr
+		Name  string
+		Value Expr
 	}
 
 	// PrintStmt 打印 (暂时) deprecated
@@ -55,6 +55,7 @@ func (p *Parser) parseExprStatement() *ExprStmt {
 	}
 }
 
+// 打印语句
 func (p *Parser) parsePrintStatement() *PrintStmt {
 
 	p.require(token.PRINT, true)
@@ -66,6 +67,17 @@ func (p *Parser) parsePrintStatement() *PrintStmt {
 
 }
 
+// 赋值语句
+func (p *Parser) parseAssignStatement(name string) *AssignStmt {
+	expr := p.parseExpr(0)
+
+	return &AssignStmt{
+		Name:  name,
+		Value: expr,
+	}
+}
+
+// 退出方法并返回值
 func (p *Parser) parseReturnStatement() *ReturnStmt {
 
 	p.require(token.RETURN, true)

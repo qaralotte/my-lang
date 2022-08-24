@@ -17,7 +17,7 @@ type (
 	// Variable 变量
 	Variable struct {
 		Name  string
-		Value Expr
+		Value interface{}
 	}
 
 	// Function 方法
@@ -43,13 +43,6 @@ func NewObjectList(previous *ObjectList) *ObjectList {
 	objs[0] = NewChannel(previous)
 	return &ObjectList{
 		Objects: &objs,
-	}
-}
-
-func NewVariable(name string) *Variable {
-	return &Variable{
-		Name:  name,
-		Value: nil,
 	}
 }
 
@@ -137,4 +130,18 @@ func (objs *ObjectList) Add(object Object) {
 
 func (objs *ObjectList) Clear() {
 	*objs.Objects = (*objs.Objects)[:1]
+}
+
+func (objs *ObjectList) Copy() *ObjectList {
+	newObjs := make([]Object, objs.size())
+	copy(newObjs, *objs.Objects)
+
+	return &ObjectList{
+		Objects: &newObjs,
+	}
+}
+
+func (objs *ObjectList) Load(newObjs *ObjectList) {
+	*objs.Objects = make([]Object, newObjs.size())
+	copy(*objs.Objects, *newObjs.Objects)
 }

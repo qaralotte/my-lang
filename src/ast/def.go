@@ -72,6 +72,7 @@ func (p *Parser) defFn() {
 	p.require(token.RBRACE, true)
 }
 
+// Deprecated
 func (p *Parser) defVar(name string) {
 	expr := p.parseExpr(0)
 

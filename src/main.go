@@ -14,7 +14,6 @@ func main() {
 	p := ast.NewParser(s)
 
 	// printer.PrintTokens(s)
-	// printer.PrintStmts(0, p.Stmts)
 	// printer.PrintObjectList(0, p.Objects)
 
 	e := rt.NewExec(p)

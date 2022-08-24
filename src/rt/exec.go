@@ -20,17 +20,50 @@ func NewExec(parser *ast.Parser) *Exec {
 }
 
 func (e *Exec) Run() {
-	for _, stmt := range e.Parser.Stmts {
-		e.stmt(stmt)
+	for {
+		stmt, isFinish := e.Parser.ParseStmt()
+		if isFinish {
+			break
+		}
+		if stmt != nil {
+			e.stmt(stmt)
+		}
 	}
+}
+
+func (e *Exec) RunWithReturn() interface{} {
+	for {
+		stmt, isFinish := e.Parser.ParseStmt()
+		if isFinish {
+			break
+		}
+		if stmt != nil {
+			if reflect.TypeOf(stmt).String() == "*ast.ReturnStmt" {
+				// 返回语句，立即返回并返回值
+				stmt := stmt.(*ast.ReturnStmt)
+				return e.expr(stmt.Expr)
+			}
+			e.stmt(stmt)
+		}
+	}
+	return nil
 }
 
 func (e *Exec) stmt(stmt ast.Stmt) {
 	switch stmt.(type) {
 	case *ast.ExprStmt:
+		// 仅表达式的语句
 		stmt := stmt.(*ast.ExprStmt)
 		e.expr(stmt.Expr)
+	case *ast.AssignStmt:
+		// 赋值语句
+		stmt := stmt.(*ast.AssignStmt)
+		e.Parser.Objects.Add(&ast.Variable{
+			Name:  stmt.Name,
+			Value: e.expr(stmt.Value),
+		})
 	case *ast.PrintStmt:
+		// 打印语句
 		stmt := stmt.(*ast.PrintStmt)
 		fmt.Println(e.expr(stmt.Expr))
 	}
@@ -61,11 +94,11 @@ func (e *Exec) expr(expr ast.Expr) interface{} {
 				return e.expr(expr.Left).(float64) + e.expr(expr.Right).(float64)
 			}
 
-			panic("错误")
+			panic(fmt.Sprintf("错误: 不合法的运算 %s + %s", leftType, rightType))
 		case ast.SUB:
 			// 整数相减: 1 - 2 = -1
 			if leftType == rightType && leftType == "int64" {
-				return e.expr(expr.Left).(int) - e.expr(expr.Right).(int)
+				return e.expr(expr.Left).(int64) - e.expr(expr.Right).(int64)
 			}
 
 			// 浮点数相减: 1.1 - 2.2 = -1.1
@@ -87,7 +120,7 @@ func (e *Exec) expr(expr ast.Expr) interface{} {
 
 			// 整数相乘: 1 * 2 = 2
 			if leftType == rightType && leftType == "int64" {
-				return e.expr(expr.Left).(int) * e.expr(expr.Right).(int)
+				return e.expr(expr.Left).(int64) * e.expr(expr.Right).(int64)
 			}
 
 			// 浮点数相乘: 1.1 * 2.2 = 2.42
@@ -109,18 +142,23 @@ func (e *Exec) expr(expr ast.Expr) interface{} {
 		expr := expr.(*ast.LitExpr)
 		switch expr.Type {
 		case ast.INT:
+			// 整数字面量
 			val, _ := strconv.ParseInt(expr.Lit, 10, 64)
 			return val
 		case ast.FLOAT:
+			// 浮点数字面量
 			val, _ := strconv.ParseFloat(expr.Lit, 64)
 			return val
 		case ast.STRING, ast.BOOL:
+			// 字符串字面量 布尔值字面量
 			return expr.Lit
 		}
 	case *ast.IdentityExpr:
+		// 变量
 		expr := expr.(*ast.IdentityExpr)
-		return e.expr(expr.Object.(*ast.Variable).Value)
+		return expr.Object.(*ast.Variable).Value
 	case *ast.CallFnExpr:
+		// 方法调用
 		expr := expr.(*ast.CallFnExpr)
 		return e.callFn(expr.Fn, expr.Params)
 	}
@@ -140,20 +178,13 @@ func (e *Exec) callFn(fn *ast.Function, params []ast.Expr) (value interface{}) {
 	for i := 0; i < len(params); i++ {
 		e.Parser.Objects.Add(&ast.Variable{
 			Name:  fn.Args[i],
-			Value: params[i],
+			Value: e.expr(params[i]),
 		})
 	}
 
 	// 开始语法分析
-	stmts := e.Parser.ParseStmts(token.RBRACE)
-	for _, stmt := range stmts {
-		if reflect.TypeOf(stmt).String() == "*ast.ReturnStmt" {
-			stmt := stmt.(*ast.ReturnStmt)
-			value = e.expr(stmt.Expr)
-			break
-		}
-		e.stmt(stmt)
-	}
+	e.Parser.EndTokens.Push(token.RBRACE)
+	value = e.RunWithReturn()
 
 	// 清空局部变量表并返回到全局变量表
 	e.Parser.Objects.Clear()
