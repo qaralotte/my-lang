@@ -53,7 +53,7 @@ func (p *Parser) defFn() {
 	}
 
 	// 添加方法进对象表
-	fn := NewFunction(name, p.Objects)
+	fn := NewFunction(name)
 	p.Objects.Add(fn)
 
 	// fn name[(...)] {...}
@@ -70,14 +70,4 @@ func (p *Parser) defFn() {
 	p.skipBlock()
 	// fn name(...) {...[}]
 	p.require(token.RBRACE, true)
-}
-
-// Deprecated
-func (p *Parser) defVar(name string) {
-	expr := p.parseExpr(0)
-
-	p.Objects.Add(&Variable{
-		Name:  name,
-		Value: expr,
-	})
 }

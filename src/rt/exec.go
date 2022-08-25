@@ -172,7 +172,8 @@ func (e *Exec) callFn(fn *ast.Function, params []ast.Expr) (value interface{}) {
 	e.Parser.Load(fn.Parser)
 
 	// 加载局部变量表
-	e.Parser.Objects = fn.Objects
+	fnObjs := ast.NewObjectList(e.Parser.Objects)
+	e.Parser.Objects = fnObjs
 
 	// 将具体的表达式传入具体的参数上
 	for i := 0; i < len(params); i++ {
