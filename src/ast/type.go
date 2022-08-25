@@ -1,23 +1,32 @@
 package ast
 
-import "fmt"
-
-// Deprecated: 解释期不需要推断类型
+import (
+	"fmt"
+	"reflect"
+	"unsafe"
+)
 
 type Type int
 
 const (
-	VOLATILE Type = iota
+	INVALID Type = iota
 	INT
 	FLOAT
 	STRING
 	BOOL
 )
 
+var types = map[string]Type{
+	"int64":   INT,
+	"float64": FLOAT,
+	"string":  STRING,
+	"bool":    BOOL,
+}
+
 func TypeString(t Type) string {
 	switch t {
-	case VOLATILE:
-		return "volatile"
+	case INVALID:
+		return "invalid"
 	case INT:
 		return "int"
 	case FLOAT:
@@ -27,52 +36,49 @@ func TypeString(t Type) string {
 	case BOOL:
 		return "bool"
 	}
-	panic(fmt.Sprintf("错误: 未知类型 %d", t))
+	panic(fmt.Sprintf("错误: 未知类型 %v", t))
 }
 
-// Merge 如果可以的话，类型应该向下合并
-func tryMerge(typ1 *Type, typ2 *Type) {
-
-	// 如果两个类型其中一个是float类型，而另一个是int类型，则将int转换成float
-	if *typ1 == INT && *typ2 == FLOAT {
-		*typ1 = *typ2
-	}
-	if *typ1 == FLOAT && *typ2 == INT {
-		*typ2 = *typ1
-	}
-
+// GetType 反射并转换成规定的类型
+func GetType(val interface{}) Type {
+	return types[reflect.TypeOf(val).String()]
 }
 
-// 判断两个类型之间是否可以计算
-func canCalc(op int, typ1 Type, typ2 Type) bool {
+// ProcessType 根据两个type与运算符进行加工
+// 1. type按照顺序摆放: INT FLOAT STRING BOOL
+// 2. 类型自动隐式转换
+func ProcessType(typ1 Type, typ2 Type) (Type, Type) {
 
-	// INT FLOAT STRING BOOL
-	// 从小到大排序，为了方便后续的判断
+	// 从小到大排序
 	if typ1 > typ2 {
 		typ3 := typ1
 		typ1 = typ2
 		typ2 = typ3
 	}
 
-	// 如果两个类型中有一个是 none，则到运行时才可以判定是否可以计算，编译期暂时通过
-	if typ1 == VOLATILE || typ2 == VOLATILE {
-		return true
+	// 类型自动隐式转换
+	if typ1 == INT && typ2 == FLOAT {
+		return FLOAT, FLOAT
 	}
 
-	// 如果两个类型相等且为int或者float，可以计算任意运算符
-	if typ1 == typ2 && (typ1 == INT || typ1 == FLOAT) {
-		return true
-	}
+	return typ1, typ2
+}
 
-	// 如果两个类型相等且为string，则只能计算+运算符
-	if typ1 == typ2 && typ1 == STRING && op == ADD {
-		return true
+// SortByType 根据类型排序值
+func SortByType(v1 interface{}, v2 interface{}) (interface{}, interface{}) {
+	t1, t2 := GetType(v1), GetType(v2)
+	if t1 > t2 {
+		return v2, v1
 	}
+	return v1, v2
+}
 
-	// 如果两个类型其中一个是string，另一个是int，则只能计算*运算符
-	if typ1 == INT && typ2 == STRING && op == MUL {
-		return true
-	}
+// SameType 判断两个类型是否等于类型 p
+func SameType(typ1 Type, typ2 Type, p Type) bool {
+	return typ1 == typ2 && typ1 == p
+}
 
-	return false
+// Int64ToInt 将 int64 转换成 int 类型
+func Int64ToInt(i int64) int {
+	return *(*int)(unsafe.Pointer(&i))
 }

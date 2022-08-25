@@ -6,7 +6,6 @@ import (
 	"my-compiler/token"
 	"reflect"
 	"strconv"
-	"unsafe"
 )
 
 type Exec struct {
@@ -73,70 +72,67 @@ func (e *Exec) expr(expr ast.Expr) interface{} {
 	switch expr.(type) {
 	case *ast.BinaryExpr:
 		expr := expr.(*ast.BinaryExpr)
-		leftType := reflect.TypeOf(e.expr(expr.Left)).String()
-		rightType := reflect.TypeOf(e.expr(expr.Right)).String()
+
+		lval, rval := e.expr(expr.Left), e.expr(expr.Right)
+		ltype, rtype := ast.ProcessType(ast.GetType(lval), ast.GetType(rval))
 
 		switch expr.Op {
 		// 加法表达式
 		case ast.ADD:
 			// 字符串相加: 'abc' + 'def' = 'abcdef'
-			if leftType == rightType && leftType == "string" {
-				return e.expr(expr.Left).(string) + e.expr(expr.Right).(string)
+			if ast.SameType(ltype, rtype, ast.STRING) {
+				return lval.(string) + rval.(string)
 			}
 
 			// 整数相加: 1 + 2 = 3
-			if leftType == rightType && leftType == "int64" {
-				return e.expr(expr.Left).(int64) + e.expr(expr.Right).(int64)
+			if ast.SameType(ltype, rtype, ast.INT) {
+				return lval.(int64) + rval.(int64)
 			}
 
 			// 浮点数相加: 1.1 + 2.2 = 3.3
-			if leftType == rightType && leftType == "float64" {
-				return e.expr(expr.Left).(float64) + e.expr(expr.Right).(float64)
+			if ast.SameType(ltype, rtype, ast.FLOAT) {
+				return lval.(float64) + rval.(float64)
 			}
 
-			panic(fmt.Sprintf("错误: 不合法的运算 %s + %s", leftType, rightType))
+			panic(fmt.Sprintf("错误: 不合法的运算 %s + %s", ast.TypeString(ltype), ast.TypeString(rtype)))
 		case ast.SUB:
 			// 整数相减: 1 - 2 = -1
-			if leftType == rightType && leftType == "int64" {
-				return e.expr(expr.Left).(int64) - e.expr(expr.Right).(int64)
+			if ast.SameType(ltype, rtype, ast.INT) {
+				return lval.(int64) - rval.(int64)
 			}
 
 			// 浮点数相减: 1.1 - 2.2 = -1.1
-			if leftType == rightType && leftType == "float64" {
-				return e.expr(expr.Left).(float64) - e.expr(expr.Right).(float64)
+			if ast.SameType(ltype, rtype, ast.FLOAT) {
+				return lval.(float64) - rval.(float64)
 			}
 		case ast.MUL:
 
 			// 字符串乘整数: 'str' * 3 = 'strstrstr'
-			if leftType == "string" && rightType == "int64" {
+			if ltype == ast.INT && rtype == ast.STRING {
+				lval, rval = ast.SortByType(lval, rval)
+
 				result := ""
-				right := e.expr(expr.Right).(int64)
-				length := *(*int)(unsafe.Pointer(&right))
-				for i := 0; i < length; i++ {
-					result += e.expr(expr.Left).(string)
+				for i := 0; i < ast.Int64ToInt(lval.(int64)); i++ {
+					result += rval.(string)
 				}
 				return result
 			}
 
 			// 整数相乘: 1 * 2 = 2
-			if leftType == rightType && leftType == "int64" {
-				return e.expr(expr.Left).(int64) * e.expr(expr.Right).(int64)
+			if ast.SameType(ltype, rtype, ast.INT) {
+				return lval.(int64) * rval.(int64)
 			}
 
 			// 浮点数相乘: 1.1 * 2.2 = 2.42
-			if leftType == rightType && leftType == "float64" {
-				return e.expr(expr.Left).(float64) * e.expr(expr.Right).(float64)
+			if ast.SameType(ltype, rtype, ast.FLOAT) {
+				return lval.(float64) * rval.(float64)
 			}
 		case ast.DIV:
-			// 整数相减: 1 / 2 = 0.5
-			if leftType == rightType && leftType == "int64" {
-				return e.expr(expr.Left).(int64) / e.expr(expr.Right).(int64)
+			// 整数相除: 1 / 2 = 0.5 浮点数相除: 1.1 / 2.2 = 0.5
+			if ast.SameType(ltype, rtype, ast.INT) || ast.SameType(ltype, rtype, ast.FLOAT) {
+				return lval.(float64) / rval.(float64)
 			}
 
-			// 浮点数相减: 1.1 / 2.2 = 0.5
-			if leftType == rightType && leftType == "float64" {
-				return e.expr(expr.Left).(float64) / e.expr(expr.Right).(float64)
-			}
 		}
 	case *ast.LitExpr:
 		expr := expr.(*ast.LitExpr)
@@ -165,6 +161,7 @@ func (e *Exec) expr(expr ast.Expr) interface{} {
 	return nil
 }
 
+// 调用方法
 func (e *Exec) callFn(fn *ast.Function, params []ast.Expr) (value interface{}) {
 	oldParser := e.Parser.Copy()
 
