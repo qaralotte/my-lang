@@ -105,6 +105,8 @@ func (e *Exec) expr(expr ast.Expr) interface{} {
 			if ast.SameType(ltype, rtype, ast.FLOAT) {
 				return lval.(float64) - rval.(float64)
 			}
+
+			panic(fmt.Sprintf("错误: 不合法的运算 %s - %s", ast.TypeString(ltype), ast.TypeString(rtype)))
 		case ast.MUL:
 
 			// 字符串乘整数: 'str' * 3 = 'strstrstr'
@@ -127,12 +129,109 @@ func (e *Exec) expr(expr ast.Expr) interface{} {
 			if ast.SameType(ltype, rtype, ast.FLOAT) {
 				return lval.(float64) * rval.(float64)
 			}
+
+			panic(fmt.Sprintf("错误: 不合法的运算 %s * %s", ast.TypeString(ltype), ast.TypeString(rtype)))
 		case ast.DIV:
-			// 整数相除: 1 / 2 = 0.5 浮点数相除: 1.1 / 2.2 = 0.5
-			if ast.SameType(ltype, rtype, ast.INT) || ast.SameType(ltype, rtype, ast.FLOAT) {
+			// 整数相除: 1 / 2 = 0.5
+			if ast.SameType(ltype, rtype, ast.INT) {
+				return float64(lval.(int64)) / float64(rval.(int64))
+			}
+
+			// 浮点数相除: 1.1 / 2.2 = 0.5
+			if ast.SameType(ltype, rtype, ast.FLOAT) {
 				return lval.(float64) / rval.(float64)
 			}
 
+			panic(fmt.Sprintf("错误: 不合法的运算 %s / %s", ast.TypeString(ltype), ast.TypeString(rtype)))
+		case ast.EQ:
+			// 1 == 2
+			if ast.SameType(ltype, rtype, ast.INT) ||
+				ast.SameType(ltype, rtype, ast.FLOAT) ||
+				ast.SameType(ltype, rtype, ast.STRING) ||
+				ast.SameType(ltype, rtype, ast.BOOL) {
+				return lval == rval
+			}
+
+			panic(fmt.Sprintf("错误: 不合法的运算 %s == %s", ast.TypeString(ltype), ast.TypeString(rtype)))
+		case ast.NQ:
+			// 1 != 2
+			if ast.SameType(ltype, rtype, ast.INT) ||
+				ast.SameType(ltype, rtype, ast.FLOAT) ||
+				ast.SameType(ltype, rtype, ast.STRING) ||
+				ast.SameType(ltype, rtype, ast.BOOL) {
+				return lval != rval
+			}
+
+			panic(fmt.Sprintf("错误: 不合法的运算 %s != %s", ast.TypeString(ltype), ast.TypeString(rtype)))
+
+		case ast.GT:
+			// 1 > 2
+			if ast.SameType(ltype, rtype, ast.INT) {
+				return lval.(int64) > rval.(int64)
+			}
+
+			// 1.2 > 2.1
+			if ast.SameType(ltype, rtype, ast.FLOAT) {
+				return lval.(float64) > rval.(float64)
+			}
+
+			// 1.2 > 2.1
+			if ast.SameType(ltype, rtype, ast.STRING) {
+				return lval.(string) > rval.(string)
+			}
+
+			panic(fmt.Sprintf("错误: 不合法的运算 %s > %s", ast.TypeString(ltype), ast.TypeString(rtype)))
+		case ast.GE:
+			// 1 >= 2
+			if ast.SameType(ltype, rtype, ast.INT) {
+				return lval.(int64) >= rval.(int64)
+			}
+
+			// 1.2 >= 2.1
+			if ast.SameType(ltype, rtype, ast.FLOAT) {
+				return lval.(float64) >= rval.(float64)
+			}
+
+			// 1.2 >= 2.1
+			if ast.SameType(ltype, rtype, ast.STRING) {
+				return lval.(string) >= rval.(string)
+			}
+
+			panic(fmt.Sprintf("错误: 不合法的运算 %s >= %s", ast.TypeString(ltype), ast.TypeString(rtype)))
+		case ast.LT:
+			// 1 < 2
+			if ast.SameType(ltype, rtype, ast.INT) {
+				return lval.(int64) < rval.(int64)
+			}
+
+			// 1.2 < 2.1
+			if ast.SameType(ltype, rtype, ast.FLOAT) {
+				return lval.(float64) < rval.(float64)
+			}
+
+			// 1.2 < 2.1
+			if ast.SameType(ltype, rtype, ast.STRING) {
+				return lval.(string) < rval.(string)
+			}
+
+			panic(fmt.Sprintf("错误: 不合法的运算 %s < %s", ast.TypeString(ltype), ast.TypeString(rtype)))
+		case ast.LE:
+			// 1 <= 2
+			if ast.SameType(ltype, rtype, ast.INT) {
+				return lval.(int64) <= rval.(int64)
+			}
+
+			// 1.2 < 2.1
+			if ast.SameType(ltype, rtype, ast.FLOAT) {
+				return lval.(float64) <= rval.(float64)
+			}
+
+			// 1.2 < 2.1
+			if ast.SameType(ltype, rtype, ast.STRING) {
+				return lval.(string) <= rval.(string)
+			}
+
+			panic(fmt.Sprintf("错误: 不合法的运算 %s <= %s", ast.TypeString(ltype), ast.TypeString(rtype)))
 		}
 	case *ast.LitExpr:
 		expr := expr.(*ast.LitExpr)
@@ -145,9 +244,13 @@ func (e *Exec) expr(expr ast.Expr) interface{} {
 			// 浮点数字面量
 			val, _ := strconv.ParseFloat(expr.Lit, 64)
 			return val
-		case ast.STRING, ast.BOOL:
-			// 字符串字面量 布尔值字面量
+		case ast.STRING:
+			// 字符串字面量
 			return expr.Lit
+		case ast.BOOL:
+			// 布尔值字面量
+			return expr.Lit
+
 		}
 	case *ast.IdentityExpr:
 		// 变量

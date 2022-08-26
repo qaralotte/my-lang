@@ -201,6 +201,8 @@ func operator(tok token.Token) int {
 		return SUB
 	case token.STAR:
 		return MUL
+	case token.SLASH:
+		return DIV
 	case token.EQ:
 		return EQ
 	case token.NQ:
@@ -215,14 +217,6 @@ func operator(tok token.Token) int {
 		return LE
 	}
 	return NOP
-}
-
-func isComparedOperator(op int) bool {
-	switch op {
-	case EQ, NQ, GT, GE, LT, LE:
-		return true
-	}
-	return false
 }
 
 func makeBinary(left Expr, op int, right Expr) *BinaryExpr {
@@ -255,29 +249,17 @@ func (p *Parser) parseExpr(currentPriority int) Expr {
 		p.nextToken()
 
 		// 1 + [2 + 3]
-		right = p.parseExpr(currentPriority)
+		right = p.parseExpr(priority(op))
 		if right == nil {
 			panic("表达式错误")
 		}
-
-		// 向下合并类型
-		// tryMerge(&leftType, &rightType)
-
-		// 检查类型运算
-		// if !canCalc(op, leftType, rightType) {
-		// 	panic(fmt.Sprintf("错误: 不合法的计算 %s %s %s", TypeString(leftType), OperatorString(op), TypeString(rightType)))
-		// }
-
-		// 如果是比较运算符, 结果应该是bool类型
-		// if isComparedOperator(op) {
-		// 	leftType = BOOL
-		// }
 
 		//     node
 		//    /    \
 		// left   right
 
 		left = makeBinary(left, op, right)
+		op = operator(p.Token)
 
 		if p.endExpr() {
 			return left
