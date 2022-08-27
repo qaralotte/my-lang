@@ -49,12 +49,20 @@ func (s *Stack) Clear() {
 	s.list = make([]Element, 0)
 }
 
+func (s *Stack) Bottom() Element {
+	return s.list[0]
+}
+
 func (s *Stack) Copy() *Stack {
-	newStack := NewStack()
-	newStack.list = s.list
-	return newStack
+	newList := make([]Element, s.Len())
+	copy(newList, s.list)
+	return &Stack{
+		list: newList,
+	}
 }
 
 func (s *Stack) Load(newStack *Stack) {
-	s.list = newStack.list
+	newList := make([]Element, newStack.Len())
+	copy(newList, newStack.list)
+	s.list = newList
 }

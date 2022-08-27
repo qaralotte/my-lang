@@ -3,13 +3,13 @@ package rt
 import (
 	"fmt"
 	"my-compiler/ast"
-	"my-compiler/token"
-	"reflect"
+	"my-compiler/data"
 	"strconv"
 )
 
 type Exec struct {
-	Parser *ast.Parser
+	Parser        *ast.Parser
+	ReturnObjects *data.Stack
 }
 
 func NewExec(parser *ast.Parser) *Exec {
@@ -18,30 +18,17 @@ func NewExec(parser *ast.Parser) *Exec {
 	}
 }
 
-func (e *Exec) Run() {
+func (e *Exec) Run() interface{} {
 	for {
-		stmt, isFinish := e.Parser.ParseStmt()
-		if isFinish {
-			break
-		}
-		if stmt != nil {
-			e.stmt(stmt)
-		}
-	}
-}
+		result := e.Parser.ParseStmt()
 
-func (e *Exec) RunWithReturn() interface{} {
-	for {
-		stmt, isFinish := e.Parser.ParseStmt()
-		if isFinish {
+		if result.IsEndBlock {
+			// 如果是endBlock，应该直接结束
 			break
 		}
+
+		stmt := result.Stmt
 		if stmt != nil {
-			if reflect.TypeOf(stmt).String() == "*ast.ReturnStmt" {
-				// 返回语句，立即返回并返回值
-				stmt := stmt.(*ast.ReturnStmt)
-				return e.expr(stmt.Expr)
-			}
 			e.stmt(stmt)
 		}
 	}
@@ -258,40 +245,9 @@ func (e *Exec) expr(expr ast.Expr) interface{} {
 		return expr.Object.(*ast.Variable).Value
 	case *ast.CallFnExpr:
 		// 方法调用
-		expr := expr.(*ast.CallFnExpr)
-		return e.callFn(expr.Fn, expr.Params)
+		// expr := expr.(*ast.CallFnExpr)
+		// return e.callFn(expr.Fn, expr.Params)
+
 	}
 	return nil
-}
-
-// 调用方法
-func (e *Exec) callFn(fn *ast.Function, params []ast.Expr) (value interface{}) {
-	oldParser := e.Parser.Copy()
-
-	// parser 定位到方法语句块内
-	e.Parser.Load(fn.Parser)
-
-	// 加载局部变量表
-	fnObjs := ast.NewObjectList(e.Parser.Objects)
-	e.Parser.Objects = fnObjs
-
-	// 将具体的表达式传入具体的参数上
-	for i := 0; i < len(params); i++ {
-		e.Parser.Objects.Add(&ast.Variable{
-			Name:  fn.Args[i],
-			Value: e.expr(params[i]),
-		})
-	}
-
-	// 开始语法分析
-	e.Parser.EndTokens.Push(token.RBRACE)
-	value = e.RunWithReturn()
-
-	// 清空局部变量表并返回到全局变量表
-	e.Parser.Objects.Clear()
-	e.Parser.Objects = e.Parser.Objects.Get(0).(*ast.Channel).Next
-
-	e.Parser.Load(oldParser)
-
-	return
 }

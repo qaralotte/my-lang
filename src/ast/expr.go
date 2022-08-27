@@ -96,7 +96,6 @@ func (p *Parser) implExpr() Expr {
 		}
 
 		p.Load(copyParser)
-
 		return &IdentityExpr{
 			Object: obj,
 		}

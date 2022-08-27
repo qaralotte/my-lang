@@ -22,9 +22,9 @@ type (
 
 	// Function 方法
 	Function struct {
-		Name   string
-		Args   []string // 局部变量
-		Parser          // 仅记录状态不做语法分析
+		Name  string
+		Args  []string // 局部变量
+		Block *Parser  // 仅记录状态不做语法分析
 	}
 
 	// Channel 通道 (建立两个对象表的联系)
@@ -128,18 +128,4 @@ func (objs *ObjectList) Add(object Object) {
 
 func (objs *ObjectList) Clear() {
 	*objs.Objects = (*objs.Objects)[:1]
-}
-
-func (objs *ObjectList) Copy() *ObjectList {
-	newObjs := make([]Object, objs.size())
-	copy(newObjs, *objs.Objects)
-
-	return &ObjectList{
-		Objects: &newObjs,
-	}
-}
-
-func (objs *ObjectList) Load(newObjs *ObjectList) {
-	*objs.Objects = make([]Object, newObjs.size())
-	copy(*objs.Objects, *newObjs.Objects)
 }

@@ -12,7 +12,7 @@ type (
 		Expr
 	}
 
-	// AssignStmt 赋值表达式
+	// AssignStmt 赋值语句
 	AssignStmt struct {
 		Name  string
 		Value Expr
@@ -23,8 +23,17 @@ type (
 		Expr
 	}
 
+	// ReturnStmt 返回语句
 	ReturnStmt struct {
 		Expr
+	}
+
+	// IfStmt 选择分支语句
+	IfStmt struct {
+		Cond  Expr
+		True  *Parser
+		False *Parser
+		End   *Parser
 	}
 )
 
@@ -32,6 +41,31 @@ func (*ExprStmt) stmt()   {}
 func (*AssignStmt) stmt() {}
 func (*PrintStmt) stmt()  {}
 func (*ReturnStmt) stmt() {}
+func (*IfStmt) stmt()     {}
+
+// SkipBlock 跳过块状语句
+func (p *Parser) SkipBlock() (*Parser, *Parser) {
+	p.require(token.LBRACE, true)
+	start := p.Copy()
+
+	level := 0 // block 层数
+	for p.Token != token.RBRACE || level != 0 {
+		if p.Token == token.LBRACE {
+			level += 1
+		}
+
+		if p.Token == token.RBRACE {
+			level -= 1
+		}
+
+		p.nextToken()
+	}
+
+	p.require(token.RBRACE, true)
+	end := p.Copy()
+
+	return start, end
+}
 
 // 获取当前token的identity
 func (p *Parser) identity() (obj Object, name string) {
@@ -90,5 +124,27 @@ func (p *Parser) parseReturnStatement() *ReturnStmt {
 	expr := p.parseExpr(0)
 	return &ReturnStmt{
 		Expr: expr,
+	}
+}
+
+func (p *Parser) parseIfStatement() *IfStmt {
+
+	p.require(token.IF, true)
+
+	cond := p.parseExpr(0)
+
+	var trueBlock, falseBlock, endPos *Parser = nil, nil, nil
+	trueBlock, endPos = p.SkipBlock()
+
+	if p.Token == token.ELSE {
+		p.nextToken()
+		falseBlock, endPos = p.SkipBlock()
+	}
+
+	return &IfStmt{
+		Cond:  cond,
+		True:  trueBlock,
+		False: falseBlock,
+		End:   endPos,
 	}
 }

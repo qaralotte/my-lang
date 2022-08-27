@@ -5,22 +5,6 @@ import (
 	"my-compiler/token"
 )
 
-// 跳过方法内语句
-func (p *Parser) skipBlock() {
-	level := 0 // block 层数
-	for p.Token != token.RBRACE || level != 0 {
-		if p.Token == token.LPAREN {
-			level += 1
-		}
-
-		if p.Token == token.RPAREN {
-			level -= 1
-		}
-
-		p.nextToken()
-	}
-}
-
 // 定义方法参数
 func (p *Parser) defFnArgs() (args []string) {
 
@@ -42,10 +26,10 @@ func (p *Parser) defFnArgs() (args []string) {
 
 // 定义方法
 func (p *Parser) defFn() {
-	// [fn] name(...) {...}
+	// [fn] name(...)
 	p.require(token.FN, true)
 
-	// fn [name](...) {...}
+	// fn [name](...)
 	name := p.require(token.IDENTITY, true)
 	obj := p.Objects.findObject(name)
 	if obj != nil {
@@ -56,18 +40,13 @@ func (p *Parser) defFn() {
 	fn := NewFunction(name)
 	p.Objects.Add(fn)
 
-	// fn name[(...)] {...}
+	// fn name[(...)]
 	if p.Token == token.LPAREN {
 		p.nextToken()
 		fn.Args = p.defFnArgs()
 		p.require(token.RPAREN, true)
 	}
 
-	// fn name(...) [{]...}
-	p.require(token.LBRACE, true)
-
-	fn.Parser = p.Copy()
-	p.skipBlock()
-	// fn name(...) {...[}]
-	p.require(token.RBRACE, true)
+	// 跳过块状方法
+	fn.Block, _ = p.SkipBlock()
 }

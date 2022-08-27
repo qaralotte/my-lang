@@ -38,6 +38,8 @@ const (
 	FN
 	RETURN
 	PRINT
+	IF
+	ELSE
 )
 
 var tokens = map[Token]string{
@@ -74,6 +76,8 @@ var tokens = map[Token]string{
 	FN:     "fn",
 	RETURN: "return",
 	PRINT:  "print",
+	IF:     "if",
+	ELSE:   "else",
 }
 
 func String(token Token) string {
@@ -92,4 +96,6 @@ var Keywords = []KeywordPair{
 	{"fn", FN},
 	{"return", RETURN},
 	{"print", PRINT},
+	{"if", IF},
+	{"else", ELSE},
 }
