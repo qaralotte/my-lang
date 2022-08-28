@@ -1,7 +1,7 @@
 package ast
 
 import (
-	"my-compiler/token"
+	"my-lang/token"
 	"reflect"
 )
 

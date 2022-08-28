@@ -1,9 +1,9 @@
 package main
 
 import (
-	"my-compiler/ast"
-	"my-compiler/rt"
-	"my-compiler/token"
+	"my-lang/ast"
+	"my-lang/rt"
+	"my-lang/token"
 	"os"
 	"path/filepath"
 )

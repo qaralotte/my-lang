@@ -2,7 +2,7 @@ package ast
 
 import (
 	"fmt"
-	"my-compiler/token"
+	"my-lang/token"
 )
 
 type (

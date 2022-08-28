@@ -2,7 +2,7 @@ package rt
 
 import (
 	"fmt"
-	"my-compiler/ast"
+	"my-lang/ast"
 	"strconv"
 )
 

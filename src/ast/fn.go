@@ -1,8 +1,6 @@
 package ast
 
-import (
-	"my-compiler/token"
-)
+import "my-lang/token"
 
 // 定义方法参数
 func (p *Parser) defFnArgs() (args []string) {

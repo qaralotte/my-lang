@@ -1,3 +1,3 @@
-module my-compiler
+module my-lang
 
 go 1.19
