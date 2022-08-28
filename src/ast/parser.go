@@ -12,12 +12,13 @@ type Parser struct {
 	Objects *ObjectList // 对象表
 }
 
-func NewParser(toks []token.Token) *Parser {
+func NewParser(toks []token.Token, objs *ObjectList) *Parser {
+	toks = append(toks, token.EmptyToken(token.EOF))
 	parser := Parser{
 		Tokens: toks,
 		offset: 0,
 
-		Objects: NewObjectList(nil),
+		Objects: objs,
 	}
 
 	return &parser
@@ -49,12 +50,15 @@ func (p *Parser) require(tokType token.Type, autoNext bool) string {
 	return str
 }
 
-// ParseStmt 解析语句并整理为语句数组
-func (p *Parser) ParseStmt(endToken token.Type) (Stmt, bool) {
+func (p *Parser) IsEnd() bool {
+	return p.Token().Type == token.EOF
+}
 
-	// 如果是结尾token，则返回nil
-	if p.Token().Type == endToken {
-		return nil, true
+// ParseStmt 解析语句并整理为语句数组
+func (p *Parser) ParseStmt() Stmt {
+
+	if p.IsEnd() {
+		return nil
 	}
 
 	switch p.Token().Type {
@@ -67,19 +71,19 @@ func (p *Parser) ParseStmt(endToken token.Type) (Stmt, bool) {
 		if p.Token().Type == token.ASSIGN {
 			// 如果是等于，则该变量定义且赋值
 			p.next()
-			return p.parseAssignStatement(name), false
+			return p.parseAssignStatement(name)
 		} else {
 			p.rollback()
-			return p.parseExprStatement(), false
+			return p.parseExprStatement()
 		}
 	case token.RETURN:
 		// 退出作用域并返回结果
-		return p.parseReturnStatement(), false
+		return p.parseReturnStatement()
 	case token.PRINT:
-		return p.parsePrintStatement(), false
+		return p.parsePrintStatement()
 	default:
 		// 表达式
-		return p.parseExprStatement(), false
+		return p.parseExprStatement()
 	}
-	return nil, false
+	return nil
 }

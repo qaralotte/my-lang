@@ -6,34 +6,66 @@ import (
 	"reflect"
 )
 
-// BinaryExpr 二元表达式
-type BinaryExpr struct {
-	Left  Expr
-	Op    int
-	Right Expr
-}
+type (
+	// BinaryExpr 二元表达式
+	BinaryExpr struct {
+		Left  Expr
+		Op    int
+		Right Expr
+	}
 
-// LitExpr 字面量
-type LitExpr struct {
-	Type
-	Lit string
-}
+	// LitExpr 字面量
+	LitExpr struct {
+		Type
+		Lit string
+	}
 
-// IdentityExpr 变量
-type IdentityExpr struct {
-	Object
-}
+	// IdentityExpr 变量
+	IdentityExpr struct {
+		Object
+	}
 
-// CallFnExpr 调用方法
-type CallFnExpr struct {
-	Fn     *Function
-	Params []Expr
-}
+	// BlockExpr 块状语句
+	BlockExpr struct {
+		Toks []token.Token
+	}
+
+	// CallFnExpr 调用方法
+	CallFnExpr struct {
+		Fn     *Function
+		Params []Expr
+	}
+)
 
 func (*BinaryExpr) expr()   {}
 func (*LitExpr) expr()      {}
 func (*IdentityExpr) expr() {}
+func (*BlockExpr) expr()    {}
 func (*CallFnExpr) expr()   {}
+
+// 跳过方法内语句
+func (p *Parser) block() (toks []token.Token) {
+	p.require(token.LBRACE, true)
+
+	level := 0 // block 层数
+	for p.Token().Type != token.RBRACE || level != 0 {
+		toks = append(toks, p.Token())
+
+		if p.Token().Type == token.LBRACE {
+			level += 1
+		}
+
+		if p.Token().Type == token.RBRACE {
+			level -= 1
+		}
+
+		p.next()
+	}
+
+	p.require(token.RBRACE, false)
+
+	return
+}
 
 // 调用方法
 func (p *Parser) callFn(obj Object) *CallFnExpr {
@@ -120,6 +152,11 @@ func (p *Parser) implExpr() Expr {
 		return &LitExpr{
 			Type: BOOL,
 			Lit:  p.Token().Lit,
+		}
+	case token.LBRACE:
+		// 块状
+		return &BlockExpr{
+			Toks: p.block(),
 		}
 	}
 

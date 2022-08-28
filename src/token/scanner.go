@@ -221,6 +221,5 @@ func (s *Scanner) ScanTokens() (toks []Token) {
 	for tok := s.scanNext(); tok.Type != EOF; tok = s.scanNext() {
 		toks = append(toks, tok)
 	}
-	toks = append(toks, EmptyToken(EOF))
 	return
 }

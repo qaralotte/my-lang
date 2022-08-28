@@ -3,7 +3,6 @@ package rt
 import (
 	"fmt"
 	"my-compiler/ast"
-	"my-compiler/token"
 	"strconv"
 )
 
@@ -17,22 +16,24 @@ func NewExec(parser *ast.Parser) *Exec {
 	}
 }
 
-func (e *Exec) Run() {
+func (e *Exec) Run() interface{} {
 	for {
-		stmt, isEnd := e.Parser.ParseStmt(token.EOF)
-
-		if isEnd {
-			// 如果是endBlock，应该直接结束
+		if e.Parser.IsEnd() {
 			break
 		}
 
+		stmt := e.Parser.ParseStmt()
 		if stmt != nil {
-			e.stmt(stmt)
+			value := e.stmt(stmt)
+			if value != nil {
+				return value
+			}
 		}
 	}
+	return nil
 }
 
-func (e *Exec) stmt(stmt ast.Stmt) {
+func (e *Exec) stmt(stmt ast.Stmt) interface{} {
 	switch stmt.(type) {
 	case *ast.ExprStmt:
 		// 仅表达式的语句
@@ -49,7 +50,12 @@ func (e *Exec) stmt(stmt ast.Stmt) {
 		// 打印语句
 		stmt := stmt.(*ast.PrintStmt)
 		fmt.Println(e.expr(stmt.Expr))
+	case *ast.ReturnStmt:
+		stmt := stmt.(*ast.ReturnStmt)
+		return e.expr(stmt.Expr)
 	}
+
+	return nil
 }
 
 func (e *Exec) expr(expr ast.Expr) interface{} {
@@ -240,6 +246,15 @@ func (e *Exec) expr(expr ast.Expr) interface{} {
 		// 变量
 		expr := expr.(*ast.IdentityExpr)
 		return expr.Object.(*ast.Variable).Value
+	case *ast.BlockExpr:
+		// 语句块
+		expr := expr.(*ast.BlockExpr)
+
+		// 语句块内对象表
+		blockObj := ast.NewObjectList(e.Parser.Objects)
+		parser := ast.NewParser(expr.Toks, blockObj)
+		exec := NewExec(parser)
+		return exec.Run()
 	case *ast.CallFnExpr:
 		// 方法调用
 		// expr := expr.(*ast.CallFnExpr)

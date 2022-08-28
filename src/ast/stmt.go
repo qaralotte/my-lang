@@ -91,11 +91,6 @@ func (p *Parser) parseReturnStatement() *ReturnStmt {
 
 	p.require(token.RETURN, true)
 
-	parent := p.Objects.getParentObject()
-	if parent == nil {
-		panic(fmt.Sprintf("错误: 不合法的 return 使用场合"))
-	}
-
 	expr := p.parseExpr(0)
 	return &ReturnStmt{
 		Expr: expr,
