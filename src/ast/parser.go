@@ -7,7 +7,7 @@ import (
 
 type Parser struct {
 	Tokens []token.Token // 定位 token
-	offset int           // 解析 token 的索引
+	Offset int           // 解析 token 的索引
 
 	Objects *ObjectList // 对象表
 }
@@ -16,7 +16,7 @@ func NewParser(toks []token.Token, objs *ObjectList) *Parser {
 	toks = append(toks, token.EmptyToken(token.EOF))
 	parser := Parser{
 		Tokens: toks,
-		offset: 0,
+		Offset: 0,
 
 		Objects: objs,
 	}
@@ -25,17 +25,17 @@ func NewParser(toks []token.Token, objs *ObjectList) *Parser {
 }
 
 func (p *Parser) Token() token.Token {
-	return p.Tokens[p.offset]
+	return p.Tokens[p.Offset]
 }
 
 // 下一个 token
 func (p *Parser) next() {
-	p.offset += 1
+	p.Offset += 1
 }
 
-// 回滚到上一个 token
+// 回滚一个 token
 func (p *Parser) rollback() {
-	p.offset -= 1
+	p.Offset -= 1
 }
 
 // 检查传入的 token, 不符合需要的 token 就 panic
@@ -66,14 +66,37 @@ func (p *Parser) ParseStmt() Stmt {
 		// 跳过
 		p.next()
 	case token.IDENTITY:
+		// 变量声明
 		name := p.Token().Lit
+
+		// 记录此刻的 token 索引
+		startOffset := p.Offset
+
 		p.next()
 		if p.Token().Type == token.ASSIGN {
-			// 如果是等于，则该变量定义且赋值
+			// [a = ...]
+			// 变量的定义与赋值
 			p.next()
 			return p.parseAssignStatement(name)
+		} else if p.Token().Type == token.LPAREN {
+			// [a(...)]
+			p.next()
+			args := p.defFnArgs()
+
+			if p.Token().Type == token.ASSIGN {
+				// [a(...) = ...]
+				p.next()
+				p.defFn(name, args)
+			} else {
+				// [a(...) + 1]
+				p.Offset = startOffset
+				return p.parseExprStatement()
+			}
+
 		} else {
-			p.rollback()
+			// [a + 1]
+			// 表达式
+			p.Offset = startOffset
 			return p.parseExprStatement()
 		}
 	case token.RETURN:

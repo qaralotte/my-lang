@@ -67,6 +67,15 @@ func (p *Parser) block() (toks []token.Token) {
 	return
 }
 
+func (p *Parser) line() (toks []token.Token) {
+	for p.Token().Type != token.LINEBREAK && !p.IsEnd() {
+		toks = append(toks, p.Token())
+		p.next()
+	}
+
+	return
+}
+
 // 调用方法
 func (p *Parser) callFn(obj Object) *CallFnExpr {
 

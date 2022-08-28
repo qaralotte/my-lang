@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"my-compiler/token"
 	"reflect"
 )
 
@@ -22,9 +23,9 @@ type (
 
 	// Function 方法
 	Function struct {
-		Name  string
-		Args  []string // 局部变量
-		Block *Parser  // 仅记录状态不做语法分析
+		Name string
+		Args []string      // 局部变量
+		Body []token.Token // 内容
 	}
 
 	// Channel 通道 (建立两个对象表的联系)
@@ -42,13 +43,6 @@ func NewObjectList(previous *ObjectList) *ObjectList {
 	objs[0] = NewChannel(previous)
 	return &ObjectList{
 		Objects: &objs,
-	}
-}
-
-func NewFunction(name string) *Function {
-	return &Function{
-		Name: name,
-		Args: make([]string, 0),
 	}
 }
 

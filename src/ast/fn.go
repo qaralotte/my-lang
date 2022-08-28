@@ -20,10 +20,29 @@ func (p *Parser) defFnArgs() (args []string) {
 			p.require(token.IDENTITY, false)
 		}
 	}
+	p.require(token.RPAREN, true)
+
 	return
 }
 
 // 定义方法
-func (p *Parser) defFn() {
+func (p *Parser) defFn(name string, args []string) {
+
+	var body []token.Token
+	if p.Token().Type == token.LBRACE {
+		body = p.block()
+		p.require(token.RBRACE, true)
+	} else {
+		body = p.line()
+		// 行格式不用加载下一个 token (避免 EOF)
+	}
+
+	fn := &Function{
+		Name: name,
+		Args: args,
+		Body: body,
+	}
+
+	p.Objects.Add(fn)
 
 }

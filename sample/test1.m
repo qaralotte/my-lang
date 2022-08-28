@@ -12,3 +12,9 @@ b = {
 }
 
 print b
+
+f(x) = x
+g(x) = {
+    z = x + 1
+    return z
+}
