@@ -2,10 +2,23 @@ package token
 
 import "fmt"
 
-type Token int
+type (
+	Type  int
+	Token struct {
+		Type        // 类型
+		Lit  string // 字面量
+	}
+)
+
+func EmptyToken(p Type) Token {
+	return Token{
+		Type: p,
+		Lit:  "",
+	}
+}
 
 const (
-	EOF Token = iota
+	EOF Type = iota
 
 	PLUS      // +
 	MINUS     // -
@@ -35,14 +48,13 @@ const (
 
 	TRUE
 	FALSE
-	FN
 	RETURN
 	PRINT
 	IF
 	ELSE
 )
 
-var tokens = map[Token]string{
+var tokens = map[Type]string{
 	EOF: "EOF",
 
 	PLUS:      "+",
@@ -73,27 +85,25 @@ var tokens = map[Token]string{
 
 	TRUE:   "true",
 	FALSE:  "false",
-	FN:     "fn",
 	RETURN: "return",
 	PRINT:  "print",
 	IF:     "if",
 	ELSE:   "else",
 }
 
-func String(token Token) string {
-	return fmt.Sprintf("token(%s)", tokens[token])
+func TypeString(tokType Type) string {
+	return fmt.Sprintf("token(%s)", tokens[tokType])
 }
 
 type KeywordPair struct {
 	Name string
-	Token
+	Type
 }
 
 var Keywords = []KeywordPair{
 	{"_", EOF},
 	{"true", TRUE},
 	{"false", FALSE},
-	{"fn", FN},
 	{"return", RETURN},
 	{"print", PRINT},
 	{"if", IF},

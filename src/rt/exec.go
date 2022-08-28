@@ -3,13 +3,12 @@ package rt
 import (
 	"fmt"
 	"my-compiler/ast"
-	"my-compiler/data"
+	"my-compiler/token"
 	"strconv"
 )
 
 type Exec struct {
-	Parser        *ast.Parser
-	ReturnObjects *data.Stack
+	Parser *ast.Parser
 }
 
 func NewExec(parser *ast.Parser) *Exec {
@@ -18,21 +17,19 @@ func NewExec(parser *ast.Parser) *Exec {
 	}
 }
 
-func (e *Exec) Run() interface{} {
+func (e *Exec) Run() {
 	for {
-		result := e.Parser.ParseStmt()
+		stmt, isEnd := e.Parser.ParseStmt(token.EOF)
 
-		if result.IsEndBlock {
+		if isEnd {
 			// 如果是endBlock，应该直接结束
 			break
 		}
 
-		stmt := result.Stmt
 		if stmt != nil {
 			e.stmt(stmt)
 		}
 	}
-	return nil
 }
 
 func (e *Exec) stmt(stmt ast.Stmt) {

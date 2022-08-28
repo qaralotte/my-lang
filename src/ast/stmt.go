@@ -43,42 +43,17 @@ func (*PrintStmt) stmt()  {}
 func (*ReturnStmt) stmt() {}
 func (*IfStmt) stmt()     {}
 
-// SkipBlock 跳过块状语句
-func (p *Parser) SkipBlock() (*Parser, *Parser) {
-	p.require(token.LBRACE, true)
-	start := p.Copy()
-
-	level := 0 // block 层数
-	for p.Token != token.RBRACE || level != 0 {
-		if p.Token == token.LBRACE {
-			level += 1
-		}
-
-		if p.Token == token.RBRACE {
-			level -= 1
-		}
-
-		p.nextToken()
-	}
-
-	p.require(token.RBRACE, true)
-	end := p.Copy()
-
-	return start, end
-}
-
 // 获取当前token的identity
-func (p *Parser) identity() (obj Object, name string) {
-	switch p.Token {
+func (p *Parser) identity() (obj Object) {
+	switch p.Token().Type {
 	case token.IDENTITY:
 		// 变量 (且必须是变量)
-		obj = p.Objects.findObject(p.Lit)
-		name = p.Lit
-		p.nextToken()
+		obj = p.Objects.findObject(p.Token().Lit)
+		p.next()
 		return
 	}
 
-	panic(fmt.Sprintf("错误: 表达式未知的 token: %s", token.String(p.Token)))
+	panic(fmt.Sprintf("错误: 表达式未知的 token: %s", token.TypeString(p.Token().Type)))
 }
 
 // 表达式语句 (语句里只包含表达式)
@@ -124,27 +99,5 @@ func (p *Parser) parseReturnStatement() *ReturnStmt {
 	expr := p.parseExpr(0)
 	return &ReturnStmt{
 		Expr: expr,
-	}
-}
-
-func (p *Parser) parseIfStatement() *IfStmt {
-
-	p.require(token.IF, true)
-
-	cond := p.parseExpr(0)
-
-	var trueBlock, falseBlock, endPos *Parser = nil, nil, nil
-	trueBlock, endPos = p.SkipBlock()
-
-	if p.Token == token.ELSE {
-		p.nextToken()
-		falseBlock, endPos = p.SkipBlock()
-	}
-
-	return &IfStmt{
-		Cond:  cond,
-		True:  trueBlock,
-		False: falseBlock,
-		End:   endPos,
 	}
 }

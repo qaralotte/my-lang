@@ -10,11 +10,9 @@ type Scanner struct {
 	// todo 文件名
 	src []byte // 源码
 
-	ch           rune // 当前读取的字符 (utf-8)
-	nearlyCh     byte // 下一个紧挨着的字符 (必定是 ascii)
-	offset       int  // 当前偏移位置
-	inlineOffset int  // 在行内偏移位置
-	lineOffset   int  // 偏移行位置
+	offset   int  // 当前偏移位置
+	ch       rune // 当前读取的字符 (utf-8)
+	nearlyCh byte // 下一个紧挨着的字符 (必定是 ascii)
 }
 
 // end of file
@@ -46,7 +44,6 @@ func (s *Scanner) next() {
 		r, w := utf8.DecodeRune(s.src[s.offset:])
 		s.ch = r
 		s.offset += w
-		s.inlineOffset += w
 
 		// 下一个紧挨着的字符
 		if s.offset <= len(s.src)-1 {
@@ -57,12 +54,6 @@ func (s *Scanner) next() {
 	} else {
 		s.ch = eof
 	}
-}
-
-// 更新行偏移数据, 即行偏移 += 1, 行内偏移重新 = 0
-func (s *Scanner) updateLn() {
-	s.lineOffset += 1
-	s.inlineOffset = 0
 }
 
 // 跳过空格 or 换行 or 制表符
@@ -77,10 +68,10 @@ func (s *Scanner) skipSpace() {
 }
 
 // 判断是否是关键词
-func (s *Scanner) isKeyword(identity string) Token {
+func (s *Scanner) isKeyword(identity string) Type {
 	for _, keyword := range Keywords {
 		if identity == keyword.Name {
-			return keyword.Token
+			return keyword.Type
 		}
 	}
 	return IDENTITY
@@ -95,39 +86,39 @@ func (s *Scanner) nextNearlyChar(ch byte) bool {
 }
 
 // 扫描变量或者关键词字面量
-func (s *Scanner) scanIdentity() (tok Token, lit string) {
+func (s *Scanner) scanIdentity() (tok Token) {
 	for unicode.IsLetter(s.ch) || s.ch == '_' {
 		// 目前仅十进制
-		lit += string(s.ch)
+		tok.Lit += string(s.ch)
 		s.next()
 	}
-	tok = s.isKeyword(lit)
+	tok.Type = s.isKeyword(tok.Lit)
 	return
 }
 
-func (s *Scanner) scanFloat(decimal string) (tok Token, lit string) {
-	tok = FLOATLIT
+func (s *Scanner) scanFloat(decimal string) (tok Token) {
+	tok.Type = FLOATLIT
 	for unicode.IsNumber(s.ch) {
 		// 目前仅十进制
-		lit += string(s.ch)
+		tok.Lit += string(s.ch)
 		s.next()
 	}
-	lit = decimal + "." + lit
+	tok.Lit = decimal + "." + tok.Lit
 	return
 }
 
 // 扫描数字字面量
-func (s *Scanner) scanNumber() (tok Token, lit string) {
-	tok = INTLIT
+func (s *Scanner) scanNumber() (tok Token) {
+	tok.Type = INTLIT
 	for unicode.IsNumber(s.ch) {
 		// 目前仅十进制
-		lit += string(s.ch)
+		tok.Lit += string(s.ch)
 		s.next()
 
 		// 如果有小数点，则应该是浮点数
 		if s.ch == '.' {
 			s.next()
-			return s.scanFloat(lit)
+			return s.scanFloat(tok.Lit)
 		}
 
 	}
@@ -135,14 +126,14 @@ func (s *Scanner) scanNumber() (tok Token, lit string) {
 }
 
 // 扫描字符串字面量
-func (s *Scanner) scanString(end rune) (tok Token, lit string) {
-	tok = STRINGLIT
+func (s *Scanner) scanString(end rune) (tok Token) {
+	tok.Type = STRINGLIT
 	// [']xxx'
 	s.next()
 
 	// '[xxx]'
 	for s.ch != end {
-		lit += string(s.ch)
+		tok.Lit += string(s.ch)
 		s.next()
 	}
 
@@ -153,71 +144,72 @@ func (s *Scanner) scanString(end rune) (tok Token, lit string) {
 }
 
 // ScanNext 扫描当前字符返回对应的 Token, 并且偏移 offset 至下一个字符
-func (s *Scanner) ScanNext() (tok Token, lit string) {
+func (s *Scanner) scanNext() (tok Token) {
 
 	s.skipSpace()
 
 	switch s.ch {
 	case eof:
-		tok = EOF
+		tok.Type = EOF
 	case '\n':
-		tok = LINEBREAK
-		lit = `\n`
+		tok.Type = LINEBREAK
+		tok.Lit = `\n`
 	case '+':
-		tok = PLUS
+		tok.Type = PLUS
 	case '-':
-		tok = MINUS
+		tok.Type = MINUS
 	case '*':
-		tok = STAR
+		tok.Type = STAR
 	case '/':
-		tok = SLASH
+		tok.Type = SLASH
 	case ';':
-		tok = SEMICOLON
+		tok.Type = SEMICOLON
 	case '(':
-		tok = LPAREN
+		tok.Type = LPAREN
 	case ')':
-		tok = RPAREN
+		tok.Type = RPAREN
 	case '{':
-		tok = LBRACE
+		tok.Type = LBRACE
 	case '}':
-		tok = RBRACE
+		tok.Type = RBRACE
 	case '.':
-		tok = DOT
+		tok.Type = DOT
 	case ',':
-		tok = COMMA
+		tok.Type = COMMA
 	case '\'':
-		tok, lit = s.scanString('\'')
+		tok = s.scanString('\'')
 		return
 	case '"':
-		tok, lit = s.scanString('"')
+		tok = s.scanString('"')
+		return
 	case '=':
-		tok = ASSIGN
+		tok.Type = ASSIGN
 		if s.nextNearlyChar('=') {
-			tok = EQ
+			tok.Type = EQ
 		}
 	case '!':
-		tok = NOT
+		tok.Type = NOT
 		if s.nextNearlyChar('=') {
-			tok = NQ
+			tok.Type = NQ
 		}
 	case '>':
-		tok = GT
+		tok.Type = GT
 		if s.nextNearlyChar('=') {
-			tok = GE
+			tok.Type = GE
 		}
 	case '<':
-		tok = LT
+		tok.Type = LT
 		if s.nextNearlyChar('=') {
-			tok = LE
+			tok.Type = LE
 		}
 	default:
 		if unicode.IsNumber(s.ch) {
 			// 如果是数字
-			tok, lit = s.scanNumber()
+			tok = s.scanNumber()
 			return
 		} else if unicode.IsLetter(s.ch) || s.ch == '_' {
 			// 如果是字母 (变量名 or 关键词)
-			tok, lit = s.scanIdentity()
+			tok = s.scanIdentity()
 			return
 		}
 	}
@@ -225,22 +217,10 @@ func (s *Scanner) ScanNext() (tok Token, lit string) {
 	return
 }
 
-func (s *Scanner) Copy() *Scanner {
-	return &Scanner{
-		src:          s.src,
-		ch:           s.ch,
-		nearlyCh:     s.nearlyCh,
-		offset:       s.offset,
-		inlineOffset: s.inlineOffset,
-		lineOffset:   s.lineOffset,
+func (s *Scanner) ScanTokens() (toks []Token) {
+	for tok := s.scanNext(); tok.Type != EOF; tok = s.scanNext() {
+		toks = append(toks, tok)
 	}
-}
-
-func (s *Scanner) Load(ns *Scanner) {
-	s.src = ns.src
-	s.ch = ns.ch
-	s.nearlyCh = ns.nearlyCh
-	s.offset = ns.offset
-	s.inlineOffset = ns.inlineOffset
-	s.lineOffset = ns.lineOffset
+	toks = append(toks, EmptyToken(EOF))
+	return
 }

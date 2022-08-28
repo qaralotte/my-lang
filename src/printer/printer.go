@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"my-compiler/ast"
 	"my-compiler/token"
+	"strconv"
 )
 
-func PrintTokens(s *token.Scanner) {
-	for tok, lit := s.ScanNext(); tok != token.EOF; tok, lit = s.ScanNext() {
-		fmt.Print(token.String(tok))
-		if lit != "" {
-			fmt.Printf(": %s", lit)
+func PrintTokens(toks []token.Token) {
+	for i, tok := range toks {
+		fmt.Print(strconv.Itoa(i) + ": " + token.TypeString(tok.Type))
+		if tok.Lit != "" {
+			fmt.Printf(": %s", tok.Lit)
 		}
 		fmt.Println()
 	}

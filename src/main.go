@@ -10,10 +10,11 @@ import (
 
 func main() {
 
-	s := token.NewScanner(filepath.Join(os.Getenv("GOPATH"), "sample", "test1.m"))
-	// printer.PrintTokens(s)
+	scanner := token.NewScanner(filepath.Join(os.Getenv("GOPATH"), "sample", "test1.m"))
+	toks := scanner.ScanTokens()
+	// printer.PrintTokens(toks)
 
-	p := ast.NewParser(s)
+	p := ast.NewParser(toks)
 	e := rt.NewExec(p)
 	e.Run()
 

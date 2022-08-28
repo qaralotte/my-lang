@@ -49,12 +49,12 @@ func (p *Parser) callFn(obj Object) *CallFnExpr {
 	params := make([]Expr, 0)
 
 	p.require(token.LPAREN, true)
-	for p.Token != token.RPAREN {
+	for p.Token().Type != token.RPAREN {
 		expr := p.parseExpr(0)
 		params = append(params, expr)
 
-		if p.Token == token.COMMA {
-			p.nextToken()
+		if p.Token().Type == token.COMMA {
+			p.next()
 		}
 	}
 
@@ -71,31 +71,29 @@ func (p *Parser) callFn(obj Object) *CallFnExpr {
 // 解析 1 为何物, "str" 为何物, a 为何物
 func (p *Parser) implExpr() Expr {
 
-	switch p.Token {
+	switch p.Token().Type {
 	case token.LPAREN:
 		// 括号 (优先计算)
-		p.nextToken()
+		p.next()
 		node := p.parseExpr(0)
 
 		p.require(token.RPAREN, false)
 		return node
 	case token.IDENTITY:
 		// 变量
-		obj := p.Objects.findObject(p.Lit)
+		obj := p.Objects.findObject(p.Token().Lit)
 		if obj == nil {
 			// 如果对象表里没有此对象，直接报错
-			panic(fmt.Sprintf("错误: 找不到对象: %s", p.Lit))
+			panic(fmt.Sprintf("错误: 找不到对象: %s", p.Token().Lit))
 		}
 
-		copyParser := p.Copy()
-
-		p.nextToken()
-		if p.Token == token.LPAREN {
+		p.next()
+		if p.Token().Type == token.LPAREN {
 			// a(...)
 			return p.callFn(obj)
 		}
 
-		p.Load(copyParser)
+		p.rollback()
 		return &IdentityExpr{
 			Object: obj,
 		}
@@ -103,34 +101,34 @@ func (p *Parser) implExpr() Expr {
 		// 整数
 		return &LitExpr{
 			Type: INT,
-			Lit:  p.Lit,
+			Lit:  p.Token().Lit,
 		}
 	case token.FLOATLIT:
 		// 浮点数
 		return &LitExpr{
 			Type: FLOAT,
-			Lit:  p.Lit,
+			Lit:  p.Token().Lit,
 		}
 	case token.STRINGLIT:
 		// 字符串
 		return &LitExpr{
 			Type: STRING,
-			Lit:  p.Lit,
+			Lit:  p.Token().Lit,
 		}
 	case token.TRUE, token.FALSE:
 		// 布尔值
 		return &LitExpr{
 			Type: BOOL,
-			Lit:  p.Lit,
+			Lit:  p.Token().Lit,
 		}
 	}
 
-	panic(fmt.Sprintf("错误: 表达式未知的 token: %s", token.String(p.Token)))
+	panic(fmt.Sprintf("错误: 表达式未知的 token: %s", token.TypeString(p.Token().Type)))
 }
 
 // 表达式结尾符
 func (p *Parser) endExpr() bool {
-	switch p.Token {
+	switch p.Token().Type {
 	case token.LINEBREAK, token.SEMICOLON, token.RPAREN, token.EOF, token.COMMA:
 		return true
 	}
@@ -192,8 +190,8 @@ func priority(op int) int {
 }
 
 // 根据 Token 转换成对应的 Syntax
-func operator(tok token.Token) int {
-	switch tok {
+func operator(tokType token.Type) int {
+	switch tokType {
 	case token.PLUS:
 		return ADD
 	case token.MINUS:
@@ -237,15 +235,15 @@ func (p *Parser) parseExpr(currentPriority int) Expr {
 		return left
 	}
 
-	p.nextToken()
+	p.next()
 	if p.endExpr() {
 		return left
 	}
 
 	// 1 [+] 2 + 3
-	op := operator(p.Token)
+	op := operator(p.Token().Type)
 	for priority(op) > currentPriority {
-		p.nextToken()
+		p.next()
 
 		// 1 + [2 + 3]
 		right = p.parseExpr(priority(op))
@@ -258,7 +256,7 @@ func (p *Parser) parseExpr(currentPriority int) Expr {
 		// left   right
 
 		left = makeBinary(left, op, right)
-		op = operator(p.Token)
+		op = operator(p.Token().Type)
 
 		if p.endExpr() {
 			return left
