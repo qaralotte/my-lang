@@ -33,7 +33,9 @@ func (p *Parser) defFn(name string, args []string) {
 		body = p.block()
 		p.require(token.RBRACE, true)
 	} else {
-		body = p.line()
+		// 偷偷加个return
+		body = append(body, token.EmptyToken(token.RETURN))
+		body = append(body, p.line()...)
 		// 行格式不用加载下一个 token (避免 EOF)
 	}
 

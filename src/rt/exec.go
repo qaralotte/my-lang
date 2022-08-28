@@ -257,9 +257,31 @@ func (e *Exec) expr(expr ast.Expr) interface{} {
 		return exec.Run()
 	case *ast.CallFnExpr:
 		// 方法调用
-		// expr := expr.(*ast.CallFnExpr)
-		// return e.callFn(expr.Fn, expr.Params)
+		expr := expr.(*ast.CallFnExpr)
+		return e.callFn(expr.Fn, expr.Params)
 
 	}
 	return nil
+}
+
+// 调用方法
+func (e *Exec) callFn(fn *ast.Function, params []ast.Expr) interface{} {
+
+	// 函数局部变量表
+	fnObjs := ast.NewObjectList(e.Parser.Objects)
+
+	// 将具体的表达式传入具体的参数上
+	for i := 0; i < len(params); i++ {
+		fnObjs.Add(&ast.Variable{
+			Name:  fn.Args[i],
+			Value: e.expr(params[i]),
+		})
+	}
+
+	// 开始语法分析
+	parser := ast.NewParser(fn.Body, fnObjs)
+	exec := NewExec(parser)
+
+	// 解析方法体
+	return exec.Run()
 }

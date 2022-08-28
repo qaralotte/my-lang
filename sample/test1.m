@@ -18,3 +18,6 @@ g(x) = {
     z = x + 1
     return z
 }
+
+print f(1)
+print g(2)
