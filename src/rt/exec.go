@@ -3,6 +3,7 @@ package rt
 import (
 	"fmt"
 	"my-lang/ast"
+	"reflect"
 	"strconv"
 )
 
@@ -53,6 +54,29 @@ func (e *Exec) stmt(stmt ast.Stmt) interface{} {
 	case *ast.ReturnStmt:
 		stmt := stmt.(*ast.ReturnStmt)
 		return e.expr(stmt.Expr)
+	case *ast.IfStmt:
+		stmt := stmt.(*ast.IfStmt)
+		cond := e.expr(stmt.Cond)
+		if reflect.TypeOf(cond).String() != "bool" {
+			panic("错误: if 条件必须是 bool 类型")
+		}
+
+		var parser *ast.Parser = nil
+		var value interface{} = nil
+		if cond == true {
+			parser = ast.NewParser(stmt.TrueBody, ast.NewObjectList(e.Parser.Objects))
+		} else {
+			parser = ast.NewParser(stmt.FalseBody, ast.NewObjectList(e.Parser.Objects))
+		}
+
+		// 执行对应分支的语法块
+		exec := NewExec(parser)
+		value = exec.Run()
+
+		// 如果在if内return，则提前结束外层的作用域
+		if value != nil {
+			return value
+		}
 	}
 
 	return nil

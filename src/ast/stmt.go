@@ -30,10 +30,9 @@ type (
 
 	// IfStmt 选择分支语句
 	IfStmt struct {
-		Cond  Expr
-		True  *Parser
-		False *Parser
-		End   *Parser
+		Cond      Expr
+		TrueBody  []token.Token
+		FalseBody []token.Token
 	}
 )
 
@@ -94,5 +93,32 @@ func (p *Parser) parseReturnStatement() *ReturnStmt {
 	expr := p.parseExpr(0)
 	return &ReturnStmt{
 		Expr: expr,
+	}
+}
+
+// 分支选择语句
+func (p *Parser) parseIfStatement() *IfStmt {
+
+	p.require(token.IF, true)
+
+	// 条件
+	cond := p.parseExpr(0)
+
+	// 如果条件成立则进入
+	trueBody := p.block()
+	p.next()
+
+	// 如果条件非成立则进入
+	var falseBody []token.Token = nil
+	if p.Token().Type == token.ELSE {
+		p.next()
+		falseBody = p.block()
+		p.next()
+	}
+
+	return &IfStmt{
+		Cond:      cond,
+		TrueBody:  trueBody,
+		FalseBody: falseBody,
 	}
 }

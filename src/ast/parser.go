@@ -104,6 +104,8 @@ func (p *Parser) ParseStmt() Stmt {
 		return p.parseReturnStatement()
 	case token.PRINT:
 		return p.parsePrintStatement()
+	case token.IF:
+		return p.parseIfStatement()
 	default:
 		// 表达式
 		return p.parseExprStatement()
