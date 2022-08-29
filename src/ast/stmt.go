@@ -28,11 +28,17 @@ type (
 		Expr
 	}
 
-	// IfStmt 选择分支语句
+	// IfStmt 选择语句
 	IfStmt struct {
 		Cond      Expr
 		TrueBody  []token.Token
 		FalseBody []token.Token
+	}
+
+	// ForStmt 循环语句
+	ForStmt struct {
+		Cond Expr
+		Body []token.Token
 	}
 )
 
@@ -41,13 +47,14 @@ func (*AssignStmt) stmt() {}
 func (*PrintStmt) stmt()  {}
 func (*ReturnStmt) stmt() {}
 func (*IfStmt) stmt()     {}
+func (*ForStmt) stmt()    {}
 
 // 获取当前token的identity
 func (p *Parser) identity() (obj Object) {
 	switch p.Token().Type {
 	case token.IDENTITY:
 		// 变量 (且必须是变量)
-		obj = p.Objects.findObject(p.Token().Lit)
+		obj = p.Objects.FindObject(p.Token().Lit)
 		p.next()
 		return
 	}
@@ -120,5 +127,21 @@ func (p *Parser) parseIfStatement() *IfStmt {
 		Cond:      cond,
 		TrueBody:  trueBody,
 		FalseBody: falseBody,
+	}
+}
+
+func (p *Parser) parseForStatement() *ForStmt {
+	p.require(token.FOR, true)
+
+	// 条件
+	cond := p.parseExpr(0)
+
+	// 如果条件成立则进入
+	body := p.block()
+	p.next()
+
+	return &ForStmt{
+		Cond: cond,
+		Body: body,
 	}
 }

@@ -70,8 +70,8 @@ func (objs *ObjectList) size() int {
 	return len(*objs.Objects)
 }
 
-// 倒序查找当前对象表，如果没有找到对象，则往上一层继续找
-func (objs *ObjectList) findObject(name string) Object {
+// FindObject 倒序查找当前对象表，如果没有找到对象，则往上一层继续找
+func (objs *ObjectList) FindObject(name string) Object {
 	// 如果表里没有任何变量，直接返回 nil
 	if objs.size() == 0 {
 		return nil
@@ -94,7 +94,7 @@ func (objs *ObjectList) findObject(name string) Object {
 	// 如果没有找到的话就往上一层查找
 	channel := objs.Get(0).(*Channel)
 	if channel.Next != nil {
-		return channel.Next.findObject(name)
+		return channel.Next.FindObject(name)
 	}
 
 	return nil

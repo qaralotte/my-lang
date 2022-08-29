@@ -122,7 +122,7 @@ func (p *Parser) implExpr() Expr {
 		return node
 	case token.IDENTITY:
 		// 变量
-		obj := p.Objects.findObject(p.Token().Lit)
+		obj := p.Objects.FindObject(p.Token().Lit)
 		if obj == nil {
 			// 如果对象表里没有此对象，直接报错
 			panic(fmt.Sprintf("错误: 找不到对象: %s", p.Token().Lit))

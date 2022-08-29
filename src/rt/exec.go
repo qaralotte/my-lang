@@ -43,10 +43,16 @@ func (e *Exec) stmt(stmt ast.Stmt) interface{} {
 	case *ast.AssignStmt:
 		// 赋值语句
 		stmt := stmt.(*ast.AssignStmt)
-		e.Parser.Objects.Add(&ast.Variable{
-			Name:  stmt.Name,
-			Value: e.expr(stmt.Value),
-		})
+		objs := e.Parser.Objects.FindObject(stmt.Name)
+
+		if objs == nil {
+			e.Parser.Objects.Add(&ast.Variable{
+				Name:  stmt.Name,
+				Value: e.expr(stmt.Value),
+			})
+		} else {
+			objs.(*ast.Variable).Value = e.expr(stmt.Value)
+		}
 	case *ast.PrintStmt:
 		// 打印语句
 		stmt := stmt.(*ast.PrintStmt)
@@ -76,6 +82,23 @@ func (e *Exec) stmt(stmt ast.Stmt) interface{} {
 		// 如果在if内return，则提前结束外层的作用域
 		if value != nil {
 			return value
+		}
+	case *ast.ForStmt:
+		stmt := stmt.(*ast.ForStmt)
+		cond := e.expr(stmt.Cond)
+
+		objs := ast.NewObjectList(e.Parser.Objects)
+		for cond == true {
+			parser := ast.NewParser(stmt.Body, objs)
+			exec := NewExec(parser)
+			value := exec.Run()
+
+			// 如果在if内return，则提前结束外层的作用域
+			if value != nil {
+				return value
+			}
+
+			cond = e.expr(stmt.Cond)
 		}
 	}
 

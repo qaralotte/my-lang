@@ -103,9 +103,14 @@ func (p *Parser) ParseStmt() Stmt {
 		// 退出作用域并返回结果
 		return p.parseReturnStatement()
 	case token.PRINT:
+		//
 		return p.parsePrintStatement()
 	case token.IF:
+		// 选择语句
 		return p.parseIfStatement()
+	case token.FOR:
+		// 循环语句
+		return p.parseForStatement()
 	default:
 		// 表达式
 		return p.parseExprStatement()

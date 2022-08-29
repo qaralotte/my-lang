@@ -11,7 +11,7 @@ import (
 func main() {
 
 	// 新建扫描器
-	scanner := token.NewScanner(filepath.Join(os.Getenv("GOPATH"), "sample", "test1.m"))
+	scanner := token.NewScanner(filepath.Join(os.Getenv("GOPATH"), "sample", "test3.m"))
 
 	// 扫描所有的 tokens
 	toks := scanner.ScanTokens()

@@ -52,6 +52,7 @@ const (
 	PRINT
 	IF
 	ELSE
+	FOR
 )
 
 var tokens = map[Type]string{
@@ -89,6 +90,7 @@ var tokens = map[Type]string{
 	PRINT:  "print",
 	IF:     "if",
 	ELSE:   "else",
+	FOR:    "for",
 }
 
 func TypeString(tokType Type) string {
@@ -108,4 +110,5 @@ var Keywords = []KeywordPair{
 	{"print", PRINT},
 	{"if", IF},
 	{"else", ELSE},
+	{"for", FOR},
 }
