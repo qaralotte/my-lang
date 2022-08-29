@@ -1,6 +1,9 @@
 package token
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 type (
 	Type  int
@@ -111,4 +114,14 @@ var Keywords = []KeywordPair{
 	{"if", IF},
 	{"else", ELSE},
 	{"for", FOR},
+}
+
+func Debug(toks []Token) {
+	for i, tok := range toks {
+		fmt.Print(strconv.Itoa(i) + ": " + TypeString(tok.Type))
+		if tok.Lit != "" {
+			fmt.Printf(": %s", tok.Lit)
+		}
+		fmt.Println()
+	}
 }

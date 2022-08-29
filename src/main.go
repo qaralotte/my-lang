@@ -17,7 +17,7 @@ func main() {
 	toks := scanner.ScanTokens()
 
 	// 调试 tokens 结果
-	// printer.PrintTokens(toks)
+	// token.Debug(toks)
 
 	// 全局对象表
 	globalObjs := ast.NewObjectList(nil)
