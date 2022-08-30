@@ -29,7 +29,6 @@ func (p *Parser) defFn(name string, args []string) {
 	var body []token.Token
 	if p.Token().Type == token.LBRACE {
 		body = p.block()
-		p.require(token.RBRACE, true)
 	} else {
 		// 偷偷加个return
 		body = append(body, token.EmptyToken(token.RETURN))

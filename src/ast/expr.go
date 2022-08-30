@@ -62,7 +62,7 @@ func (p *Parser) block() (toks []token.Token) {
 		p.next()
 	}
 
-	p.require(token.RBRACE, false)
+	p.require(token.RBRACE, true)
 
 	return
 }
@@ -98,6 +98,7 @@ func (p *Parser) callFn(obj Object) *CallFnExpr {
 			p.next()
 		}
 	}
+	p.require(token.RPAREN, true)
 
 	if len(params) != len(fn.Args) {
 		panic(fmt.Sprintf("错误: 参数数量不一致"))
@@ -110,16 +111,15 @@ func (p *Parser) callFn(obj Object) *CallFnExpr {
 }
 
 // 解析 1 为何物, "str" 为何物, a 为何物
-func (p *Parser) implExpr() Expr {
+func (p *Parser) implExpr() (expr Expr) {
 
 	switch p.Token().Type {
 	case token.LPAREN:
 		// 括号 (优先计算)
 		p.next()
-		node := p.parseExpr(0)
+		expr = p.parseExpr(0)
 
-		p.require(token.RPAREN, false)
-		return node
+		p.require(token.RPAREN, true)
 	case token.IDENTITY:
 		// 变量
 		obj := p.Objects.FindObject(p.Token().Lit)
@@ -135,30 +135,30 @@ func (p *Parser) implExpr() Expr {
 		}
 
 		p.rollback()
-		return &IdentityExpr{
+		expr = &IdentityExpr{
 			Object: obj,
 		}
 	case token.INTLIT:
 		// 整数
-		return &LitExpr{
+		expr = &LitExpr{
 			Type: INT,
 			Lit:  p.Token().Lit,
 		}
 	case token.FLOATLIT:
 		// 浮点数
-		return &LitExpr{
+		expr = &LitExpr{
 			Type: FLOAT,
 			Lit:  p.Token().Lit,
 		}
 	case token.STRINGLIT:
 		// 字符串
-		return &LitExpr{
+		expr = &LitExpr{
 			Type: STRING,
 			Lit:  p.Token().Lit,
 		}
 	case token.TRUE, token.FALSE:
 		// 布尔值
-		return &LitExpr{
+		expr = &LitExpr{
 			Type: BOOL,
 			Lit:  p.Token().Lit,
 		}
@@ -169,11 +169,16 @@ func (p *Parser) implExpr() Expr {
 		}
 	}
 
-	panic(fmt.Sprintf("错误: 表达式未知的 token: %s", token.TypeString(p.Token().Type)))
+	p.next()
+	return
 }
 
 // 表达式结尾符
 func (p *Parser) endExpr() bool {
+	if p.IsEnd() {
+		return true
+	}
+
 	switch p.Token().Type {
 	case token.LINEBREAK, token.SEMICOLON, token.RPAREN, token.EOF, token.COMMA:
 		return true
@@ -281,11 +286,9 @@ func (p *Parser) parseExpr(currentPriority int) Expr {
 		return left
 	}
 
-	p.next()
 	if p.endExpr() {
 		return left
 	}
-
 	// 1 [+] 2 + 3
 	op := operator(p.Token().Type)
 	for priority(op) > currentPriority {

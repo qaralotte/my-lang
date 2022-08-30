@@ -113,14 +113,12 @@ func (p *Parser) parseIfStatement() *IfStmt {
 
 	// 如果条件成立则进入
 	trueBody := p.block()
-	p.next()
 
 	// 如果条件非成立则进入
 	var falseBody []token.Token = nil
 	if p.Token().Type == token.ELSE {
 		p.next()
 		falseBody = p.block()
-		p.next()
 	}
 
 	return &IfStmt{
@@ -138,7 +136,6 @@ func (p *Parser) parseForStatement() *ForStmt {
 
 	// 如果条件成立则进入
 	body := p.block()
-	p.next()
 
 	return &ForStmt{
 		Cond: cond,

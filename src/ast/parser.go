@@ -51,7 +51,7 @@ func (p *Parser) require(tokType token.Type, autoNext bool) string {
 }
 
 func (p *Parser) IsEnd() bool {
-	return p.Token().Type == token.EOF
+	return p.Offset >= len(p.Tokens) || p.Token().Type == token.EOF
 }
 
 // ParseStmt 解析语句并整理为语句数组
@@ -115,5 +115,6 @@ func (p *Parser) ParseStmt() Stmt {
 		// 表达式
 		return p.parseExprStatement()
 	}
+
 	return nil
 }
