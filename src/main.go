@@ -5,13 +5,27 @@ import (
 	"my-lang/rt"
 	"my-lang/token"
 	"os"
-	"path/filepath"
 )
+
+type MyArgs struct {
+	mainFile string
+}
+
+func initArgs() (args MyArgs) {
+
+	if len(os.Args) > 1 {
+		args.mainFile = os.Args[1]
+	}
+
+	return
+}
 
 func main() {
 
+	args := initArgs()
+
 	// 新建扫描器
-	scanner := token.NewScanner(filepath.Join(os.Getenv("GOPATH"), "sample", "test2.m"))
+	scanner := token.NewScanner(args.mainFile)
 
 	// 扫描所有的 tokens
 	toks := scanner.ScanTokens()
