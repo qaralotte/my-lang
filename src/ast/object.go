@@ -30,7 +30,7 @@ type (
 
 	// Channel 通道 (建立两个对象表的联系)
 	Channel struct {
-		Next *ObjectList // 对象表
+		Previous *ObjectList // 上一层对象表
 	}
 )
 
@@ -46,9 +46,9 @@ func NewObjectList(previous *ObjectList) *ObjectList {
 	}
 }
 
-func NewChannel(next *ObjectList) *Channel {
+func NewChannel(previous *ObjectList) *Channel {
 	return &Channel{
-		Next: next,
+		Previous: previous,
 	}
 }
 
@@ -93,21 +93,11 @@ func (objs *ObjectList) FindObject(name string) Object {
 
 	// 如果没有找到的话就往上一层查找
 	channel := objs.Get(0).(*Channel)
-	if channel.Next != nil {
-		return channel.Next.FindObject(name)
+	if channel.Previous != nil {
+		return channel.Previous.FindObject(name)
 	}
 
 	return nil
-
-}
-
-// 获取父对象 (外部对象)
-func (objs *ObjectList) getParentObject() Object {
-	parentObjs := objs.Get(0).(*Channel).Next
-	if parentObjs == nil {
-		return nil
-	}
-	return parentObjs.Get(parentObjs.size() - 1)
 }
 
 // Get 获取对象表指定下标的对象

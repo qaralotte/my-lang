@@ -193,6 +193,7 @@ const (
 	SUB
 	MUL
 	DIV
+	MOD
 	EQ
 	NQ
 	GT
@@ -211,6 +212,8 @@ func OperatorString(op int) string {
 		return "*"
 	case DIV:
 		return "/"
+	case MOD:
+		return "%"
 	case EQ:
 		return "=="
 	case NQ:
@@ -234,7 +237,7 @@ func priority(op int) int {
 		return 2
 	case ADD, SUB:
 		return 3
-	case MUL, DIV:
+	case MUL, DIV, MOD:
 		return 4
 	}
 	return 0
@@ -251,6 +254,8 @@ func operator(tokType token.Type) int {
 		return MUL
 	case token.SLASH:
 		return DIV
+	case token.PERCENT:
+		return MOD
 	case token.EQ:
 		return EQ
 	case token.NQ:

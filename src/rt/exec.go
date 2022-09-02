@@ -2,10 +2,14 @@ package rt
 
 import (
 	"fmt"
+	"math"
 	"my-lang/ast"
 	"reflect"
 	"strconv"
 )
+
+// ReturnLevel 可返回层数
+var returnLevel = 0
 
 type Exec struct {
 	Parser *ast.Parser
@@ -58,6 +62,10 @@ func (e *Exec) stmt(stmt ast.Stmt) interface{} {
 		stmt := stmt.(*ast.PrintStmt)
 		fmt.Println(e.expr(stmt.Expr))
 	case *ast.ReturnStmt:
+		if returnLevel == 0 {
+			panic("错误: return 语句在不合法的位置")
+		}
+
 		stmt := stmt.(*ast.ReturnStmt)
 		return e.expr(stmt.Expr)
 	case *ast.IfStmt:
@@ -93,7 +101,7 @@ func (e *Exec) stmt(stmt ast.Stmt) interface{} {
 			exec := NewExec(parser)
 			value := exec.Run()
 
-			// 如果在if内return，则提前结束外层的作用域
+			// 如果在for内return，则提前结束外层的作用域
 			if value != nil {
 				return value
 			}
@@ -180,6 +188,18 @@ func (e *Exec) expr(expr ast.Expr) interface{} {
 			}
 
 			panic(fmt.Sprintf("错误: 不合法的运算 %s / %s", ast.TypeString(ltype), ast.TypeString(rtype)))
+		case ast.MOD:
+			// 整数相除: 3 % 2 = 1
+			if ast.SameType(ltype, rtype, ast.INT) {
+				return lval.(int64) % rval.(int64)
+			}
+
+			// 浮点数相除: 2.3 % 1.2 = 0.1
+			if ast.SameType(ltype, rtype, ast.FLOAT) {
+				return math.Mod(lval.(float64), rval.(float64))
+			}
+
+			panic(fmt.Sprintf("错误: 不合法的运算 %s % %s", ast.TypeString(ltype), ast.TypeString(rtype)))
 		case ast.EQ:
 			// 1 == 2
 			if ast.SameType(ltype, rtype, ast.INT) ||
@@ -312,7 +332,7 @@ func (e *Exec) expr(expr ast.Expr) interface{} {
 }
 
 // 调用方法
-func (e *Exec) callFn(fn *ast.Function, params []ast.Expr) interface{} {
+func (e *Exec) callFn(fn *ast.Function, params []ast.Expr) (value interface{}) {
 
 	// 函数局部变量表
 	fnObjs := ast.NewObjectList(e.Parser.Objects)
@@ -325,10 +345,18 @@ func (e *Exec) callFn(fn *ast.Function, params []ast.Expr) interface{} {
 		})
 	}
 
+	// 可返回层数+1
+	returnLevel += 1
+
 	// 开始语法分析
 	parser := ast.NewParser(fn.Body, fnObjs)
 	exec := NewExec(parser)
 
 	// 解析方法体
-	return exec.Run()
+	value = exec.Run()
+
+	// 可返回层数-1
+	returnLevel -= 1
+
+	return
 }

@@ -162,6 +162,8 @@ func (s *Scanner) scanNext() (tok Token) {
 		tok.Type = STAR
 	case '/':
 		tok.Type = SLASH
+	case '%':
+		tok.Type = PERCENT
 	case ';':
 		tok.Type = SEMICOLON
 	case '(':

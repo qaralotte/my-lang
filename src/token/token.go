@@ -27,6 +27,7 @@ const (
 	MINUS     // -
 	STAR      // *
 	SLASH     // /
+	PERCENT   // %
 	LINEBREAK // \n
 	SEMICOLON // ;
 	LPAREN    // (
@@ -65,6 +66,7 @@ var tokens = map[Type]string{
 	MINUS:     "-",
 	STAR:      "*",
 	SLASH:     "/",
+	PERCENT:   "%",
 	LINEBREAK: "LINE-BREAK",
 	SEMICOLON: ";",
 	LPAREN:    "(",
