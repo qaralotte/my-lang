@@ -317,11 +317,16 @@ func (e *Exec) expr(expr ast.Expr) interface{} {
 		// 语句块
 		expr := expr.(*ast.BlockExpr)
 
+		returnLevel += 1
+
 		// 语句块内对象表
 		blockObj := ast.NewObjectList(e.Parser.Objects)
 		parser := ast.NewParser(expr.Toks, blockObj)
 		exec := NewExec(parser)
-		return exec.Run()
+		val := exec.Run()
+
+		returnLevel -= 1
+		return val
 	case *ast.CallFnExpr:
 		// 方法调用
 		expr := expr.(*ast.CallFnExpr)

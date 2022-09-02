@@ -40,15 +40,11 @@ func (*Channel) obj()  {}
 
 func NewObjectList(previous *ObjectList) *ObjectList {
 	objs := make([]Object, 1)
-	objs[0] = NewChannel(previous)
+	objs[0] = &Channel{
+		Previous: previous,
+	}
 	return &ObjectList{
 		Objects: &objs,
-	}
-}
-
-func NewChannel(previous *ObjectList) *Channel {
-	return &Channel{
-		Previous: previous,
 	}
 }
 
@@ -66,19 +62,15 @@ func (objs *ObjectList) addBatch(object []Object) {
 	*objs.Objects = append(*objs.Objects, object...)
 }
 
-func (objs *ObjectList) size() int {
+func (objs *ObjectList) Len() int {
 	return len(*objs.Objects)
 }
 
 // FindObject 倒序查找当前对象表，如果没有找到对象，则往上一层继续找
 func (objs *ObjectList) FindObject(name string) Object {
-	// 如果表里没有任何变量，直接返回 nil
-	if objs.size() == 0 {
-		return nil
-	}
 
 	// 从后往前遍历
-	for i := objs.size() - 1; i > 0; i-- {
+	for i := objs.Len() - 1; i > 0; i-- {
 		// 根据对象类型来判断
 		fieldName, isExsit := getObjectField(objs.Get(i), "Name")
 		if !isExsit {

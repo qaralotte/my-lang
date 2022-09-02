@@ -9,9 +9,10 @@ isPrime(n) = {
     return true
 }
 
-j = 2
-for j < 10 {
-    print isPrime(j)
-    j = j + 1
+i = 3
+for i < 10 {
+    print isPrime(i)
+    print i
+    i = i + 1
 }
 

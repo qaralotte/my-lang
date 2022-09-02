@@ -28,6 +28,10 @@ func (p *Parser) Token() token.Token {
 	return p.Tokens[p.Offset]
 }
 
+func (p *Parser) CurrentPos() int {
+	return p.Objects.Len() - 1
+}
+
 // 下一个 token
 func (p *Parser) next() {
 	p.Offset += 1
