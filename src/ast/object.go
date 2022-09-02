@@ -23,9 +23,10 @@ type (
 
 	// Function 方法
 	Function struct {
-		Name string
-		Args []string      // 局部变量
-		Body []token.Token // 内容
+		Name       string
+		Args       []string      // 局部变量
+		Body       []token.Token // 内容
+		ParentObjs *ObjectList   // 父对象表 (截取后的)
 	}
 
 	// Channel 通道 (建立两个对象表的联系)
@@ -37,16 +38,6 @@ type (
 func (*Variable) obj() {}
 func (*Function) obj() {}
 func (*Channel) obj()  {}
-
-func NewObjectList(previous *ObjectList) *ObjectList {
-	objs := make([]Object, 1)
-	objs[0] = &Channel{
-		Previous: previous,
-	}
-	return &ObjectList{
-		Objects: &objs,
-	}
-}
 
 // 获取对象名称
 func getObjectField(obj Object, field string) (reflect.Value, bool) {
@@ -60,6 +51,16 @@ func getObjectField(obj Object, field string) (reflect.Value, bool) {
 // 往对象表里插入新对象
 func (objs *ObjectList) addBatch(object []Object) {
 	*objs.Objects = append(*objs.Objects, object...)
+}
+
+func NewObjectList(previous *ObjectList) *ObjectList {
+	objs := make([]Object, 1)
+	objs[0] = &Channel{
+		Previous: previous,
+	}
+	return &ObjectList{
+		Objects: &objs,
+	}
 }
 
 func (objs *ObjectList) Len() int {
@@ -104,4 +105,11 @@ func (objs *ObjectList) Add(object Object) {
 
 func (objs *ObjectList) Clear() {
 	*objs.Objects = (*objs.Objects)[:1]
+}
+
+func (objs *ObjectList) Slice(start int, end int) *ObjectList {
+	sliceObjs := (*objs.Objects)[start:end]
+	return &ObjectList{
+		Objects: &sliceObjs,
+	}
 }

@@ -12,7 +12,6 @@ isPrime(n) = {
 i = 3
 for i < 10 {
     print isPrime(i)
-    print i
     i = i + 1
 }
 

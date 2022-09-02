@@ -340,7 +340,7 @@ func (e *Exec) expr(expr ast.Expr) interface{} {
 func (e *Exec) callFn(fn *ast.Function, params []ast.Expr) (value interface{}) {
 
 	// 函数局部变量表
-	fnObjs := ast.NewObjectList(e.Parser.Objects)
+	fnObjs := ast.NewObjectList(fn.ParentObjs)
 
 	// 将具体的表达式传入具体的参数上
 	for i := 0; i < len(params); i++ {

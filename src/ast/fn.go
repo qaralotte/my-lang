@@ -41,7 +41,7 @@ func (p *Parser) defFn(name string, args []string) {
 		Args: args,
 		Body: body,
 	}
-
 	p.Objects.Add(fn)
 
+	fn.ParentObjs = p.Objects.Slice(0, p.Objects.Len())
 }
